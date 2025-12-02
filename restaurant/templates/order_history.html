@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+
+{% block title %}Order History - Restaurant{% endblock %}
+
+{% block content %}
+<style>
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .profile-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .stat-card .value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-card .label {
+        color: #6c757d;
+        font-size: 0.95rem;
+    }
+    
+    .stat-card.vip {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+    
+    .stat-card.vip .value {
+        color: white;
+    }
+    
+    .rewards-section {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        margin-bottom: 3rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .rewards-section h2 {
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+    }
+    
+    .rewards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .reward-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+    }
+    
+    .reward-card h3 {
+        margin-bottom: 0.5rem;
+        font-size: 1.5rem;
+    }
+    
+    .reward-card .points {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        margin-bottom: 1rem;
+    }
+    
+    .reward-card .btn {
+        background: white;
+        color: #667eea;
+    }
+    
+    .reward-card.locked {
+        background: #e9ecef;
+        color: #6c757d;
+    }
+    
+    .orders-section {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .orders-section h2 {
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+    }
+    
+    .order-card {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .order-id {
+        font-weight: bold;
+        color: #2c3e50;
+    }
+    
+    .order-status {
+        padding: 6px 15px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    
+    .order-status.pending { background: #fff3cd; color: #856404; }
+    .order-status.confirmed { background: #d1ecf1; color: #0c5460; }
+    .order-status.preparing { background: #cce5ff; color: #004085; }
+    .order-status.ready { background: #d4edda; color: #155724; }
+    .order-status.delivered { background: #d4edda; color: #155724; }
+    .order-status.cancelled { background: #f8d7da; color: #721c24; }
+    
+    .order-items {
+        margin-bottom: 1rem;
+    }
+    
+    .order-item {
+        padding: 0.5rem 0;
+        color: #495057;
+    }
+    
+    .order-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1rem;
+        border-top: 1px solid #e9ecef;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .order-date {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .order-total {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .no-orders {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+</style>
+
+<div class="page-header">
+    <h1>📜 Order History & Rewards</h1>
+    <p>Track your orders and redeem rewards</p>
+</div>
+
+<div class="profile-stats">
+    <div class="stat-card">
+        <div class="value">{{ profile.points }}</div>
+        <div class="label">Reward Points</div>
+    </div>
+    <div class="stat-card">
+        <div class="value">{{ orders.count }}</div>
+        <div class="label">Total Orders</div>
+    </div>
+    {% if profile.is_vip %}
+    <div class="stat-card vip">
+        <div class="value">⭐ VIP</div>
+        <div class="label">Member Since {{ profile.vip_since|date:"M Y" }}</div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="rewards-section">
+    <h2>🎁 Available Rewards</h2>
+    {% if available_rewards %}
+    <div class="rewards-grid">
+        {% for reward in available_rewards %}
+        <div class="reward-card">
+            <h3>{{ reward.name }}</h3>
+            <p class="points">{{ reward.points }} Points Required</p>
+            <p>You have {{ profile.points }} points</p>
+        </div>
+        {% endfor %}
+    </div>
+    <p style="margin-top: 1.5rem; color: #6c757d;">
+        <strong>Reward Tiers:</strong><br>
+        🍰 100 points → Free Dessert<br>
+        🍝 250 points → Free Main Dish<br>
+        🎉 500 points → VIP Status (10% off all orders)
+    </p>
+    {% else %}
+    <p style="color: #6c757d;">Keep ordering to earn points and unlock rewards! You currently have {{ profile.points }} points.</p>
+    {% endif %}
+</div>
+
+{% if redemptions %}
+<div class="rewards-section">
+    <h2>🎯 Redemption History</h2>
+    {% for redemption in redemptions %}
+    <div class="order-item">
+        <strong>{{ redemption.reward.name }}</strong> - {{ redemption.points_spent }} points - 
+        <span style="color: #6c757d;">{{ redemption.redeemed_at|date:"M d, Y" }}</span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="orders-section">
+    <h2>📦 Your Orders</h2>
+    {% if orders %}
+        {% for order in orders %}
+        <div class="order-card">
+            <div class="order-header">
+                <span class="order-id">Order #{{ order.id }}</span>
+                <span class="order-status {{ order.status }}">{{ order.get_status_display }}</span>
+            </div>
+            
+            <div class="order-items">
+                {% for item in order.items.all %}
+                <div class="order-item">
+                    {{ item.quantity }}x {{ item.menu_item.name }} - ${{ item.subtotal }}
+                </div>
+                {% endfor %}
+                {% if order.special_instructions %}
+                <div class="order-item" style="font-style: italic; color: #6c757d;">
+                    Note: {{ order.special_instructions }}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="order-footer">
+                <div>
+                    <div class="order-date">{{ order.created_at|date:"F d, Y - g:i A" }}</div>
+                    <div style="color: #28a745; margin-top: 0.3rem;">
+                        ⭐ +{{ order.points_earned }} points earned
+                    </div>
+                    {% if order.discount_applied > 0 %}
+                    <div style="color: #f5576c; margin-top: 0.3rem;">
+                        💰 VIP Discount: -${{ order.discount_applied }}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="order-total">${{ order.total_amount }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="no-orders">
+        <h2>No orders yet</h2>
+        <p>Start ordering to earn rewards!</p>
+        <a href="{% url 'menu' %}" class="btn" style="margin-top: 1rem;">Browse Menu</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - Restaurant{% endblock %}
+
+{% block content %}
+<style>
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .profile-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .profile-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .profile-card h2 {
+        color: #667eea;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .info-value {
+        color: #6c757d;
+    }
+    
+    .vip-banner {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .vip-banner h2 {
+        margin-bottom: 0.5rem;
+        border: none;
+        color: white;
+        padding: 0;
+    }
+</style>
+
+<div class="page-header">
+    <h1>👤 My Profile</h1>
+    <p>Manage your account information</p>
+</div>
+
+<div class="profile-container">
+    {% if profile.is_vip %}
+    <div class="vip-banner">
+        <h2>⭐ VIP Member</h2>
+        <p>You're enjoying 10% off on all orders!</p>
+        <p style="font-size: 0.9rem; opacity: 0.9;">Member since {{ profile.vip_since|date:"F Y" }}</p>
+    </div>
+    {% endif %}
+    
+    <div class="profile-card">
+        <h2>Account Information</h2>
+        <div class="info-row">
+            <span class="info-label">Username:</span>
+            <span class="info-value">{{ user.username }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Email:</span>
+            <span class="info-value">{{ user.email|default:"Not provided" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Member Since:</span>
+            <span class="info-value">{{ user.date_joined|date:"F d, Y" }}</span>
+        </div>
+    </div>
+    
+    <div class="profile-card">
+        <h2>Rewards Summary</h2>
+        <div class="info-row">
+            <span class="info-label">Current Points:</span>
+            <span class="info-value" style="font-size: 1.3rem; font-weight: bold; color: #667eea;">{{ profile.points }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Total Orders:</span>
+            <span class="info-value">{{ user.orders.count }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">VIP Status:</span>
+            <span class="info-value">
+                {% if profile.is_vip %}
+                    ✓ Active
+                {% else %}
+                    {{ 500|add:"-"|add:profile.points }} more points to VIP
+                {% endif %}
+            </span>
+        </div>
+    </div>
+    
+    <form method="post" class="profile-card">
+        {% csrf_token %}
+        <h2>Contact Information</h2>
+        
+        <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" name="phone" value="{{ profile.phone }}" placeholder="Enter your phone number">
+        </div>
+        
+        <div class="form-group">
+            <label for="address">Delivery Address</label>
+            <textarea id="address" name="address" rows="3" placeholder="Enter your delivery address">{{ profile.address }}</textarea>
+        </div>
+        
+        <button type="submit" class="btn">Update Profile</button>
+    </form>
+    
+    <div style="text-align: center; margin-top: 2rem;">
+        <a href="{% url 'order_history' %}" class="btn btn-secondary">View Order History</a>
+    </div>
+</div>
+{% endblock %}

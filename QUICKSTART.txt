@@ -1,0 +1,63 @@
+╔══════════════════════════════════════════════════════════════╗
+║         🍽️  RESTAURANT WEBSITE - QUICK START GUIDE          ║
+╚══════════════════════════════════════════════════════════════╝
+
+📦 STEP 1: INSTALL DEPENDENCIES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+pip install django pillow
+
+🗄️ STEP 2: SETUP DATABASE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+python manage.py makemigrations
+python manage.py migrate
+
+👤 STEP 3: CREATE ADMIN ACCOUNT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+python manage.py createsuperuser
+
+📁 STEP 4: CREATE MEDIA FOLDERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Windows:   mkdir media\menu_items media\news
+Mac/Linux: mkdir -p media/menu_items media/news
+
+🎨 STEP 5: ADD SAMPLE DATA (OPTIONAL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+python manage.py shell < populate_sample_data.py
+
+🚀 STEP 6: RUN SERVER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+python manage.py runserver
+
+╔══════════════════════════════════════════════════════════════╗
+║                      🌐 ACCESS LINKS                         ║
+╠══════════════════════════════════════════════════════════════╣
+║  Website:      http://127.0.0.1:8000/                       ║
+║  Admin Panel:  http://127.0.0.1:8000/admin/                 ║
+╚══════════════════════════════════════════════════════════════╝
+
+✨ FEATURES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ User Authentication (Signup/Login/Logout)
+✓ Menu Browsing with Categories
+✓ Online Ordering System
+✓ Rewards Program (10% back in points)
+✓ Order History Tracking
+✓ News Feeds & Announcements
+✓ Profile Management
+✓ Admin Panel for Management
+
+🎁 REWARDS SYSTEM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🍰 100 points  → Free Dessert
+🍝 250 points  → Free Main Dish
+🎉 500 points  → VIP Status (10% off all orders)
+
+📖 NEED MORE HELP?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Read README.md for full documentation
+• Read SETUP.md for detailed setup instructions
+• Check Django docs: https://docs.djangoproject.com/
+
+═══════════════════════════════════════════════════════════════
+           Made with ❤️ and Django | Happy Coding! 🚀
+═══════════════════════════════════════════════════════════════

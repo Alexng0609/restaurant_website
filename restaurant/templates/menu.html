@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Menu - Restaurant{% endblock %}
+
+{% block content %}
+<style>
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .category-filter {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 3rem;
+    }
+    
+    .category-btn {
+        padding: 10px 25px;
+        border: 2px solid #667eea;
+        background: white;
+        color: #667eea;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+    }
+    
+    .category-btn:hover,
+    .category-btn.active {
+        background: #667eea;
+        color: white;
+    }
+    
+    .menu-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+    
+    .menu-item {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: transform 0.3s;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .menu-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+    }
+    
+    .menu-item img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+    
+    .menu-item-content {
+        padding: 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .menu-item h3 {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+        font-size: 1.3rem;
+    }
+    
+    .menu-item .category-tag {
+        display: inline-block;
+        padding: 4px 12px;
+        background: #e9ecef;
+        color: #495057;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .menu-item .description {
+        color: #6c757d;
+        margin-bottom: 1rem;
+        flex-grow: 1;
+    }
+    
+    .menu-item .price {
+        font-size: 1.8rem;
+        color: #667eea;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+    
+    .menu-item .availability {
+        padding: 8px 15px;
+        border-radius: 5px;
+        text-align: center;
+        font-weight: 600;
+    }
+    
+    .menu-item .available {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .menu-item .unavailable {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .no-items {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+</style>
+
+<div class="page-header">
+    <h1>🍔 Our Menu</h1>
+    <p>Discover our delicious selection of dishes</p>
+</div>
+
+<div class="category-filter">
+    <a href="{% url 'menu' %}" class="category-btn {% if not selected_category %}active{% endif %}">All Items</a>
+    {% for category in categories %}
+    <a href="{% url 'menu' %}?category={{ category.id }}" 
+       class="category-btn {% if selected_category == category.id|stringformat:'s' %}active{% endif %}">
+        {{ category.name }}
+    </a>
+    {% endfor %}
+</div>
+
+<div class="menu-grid">
+    {% if menu_items %}
+        {% for item in menu_items %}
+        <div class="menu-item">
+            {% if item.image %}
+            <img src="{{ item.image.url }}" alt="{{ item.name }}">
+            {% else %}
+            <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+            {% endif %}
+            <div class="menu-item-content">
+                <span class="category-tag">{{ item.category.name }}</span>
+                <h3>{{ item.name }}</h3>
+                <p class="description">{{ item.description }}</p>
+                <div class="price">${{ item.price }}</div>
+                <div class="availability {% if item.is_available %}available{% else %}unavailable{% endif %}">
+                    {% if item.is_available %}
+                        ✓ Available
+                    {% else %}
+                        ✗ Currently Unavailable
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="no-items" style="grid-column: 1 / -1;">
+        <h2>No items available</h2>
+        <p>Please check back later!</p>
+    </div>
+    {% endif %}
+</div>
+
+<div style="text-align: center; margin-top: 2rem;">
+    {% if user.is_authenticated %}
+    <a href="{% url 'place_order' %}" class="btn">Place an Order</a>
+    {% else %}
+    <a href="{% url 'signup' %}" class="btn">Sign Up to Order</a>
+    {% endif %}
+</div>
+{% endblock %}

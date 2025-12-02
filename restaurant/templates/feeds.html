@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}News & Updates - Restaurant{% endblock %}
+
+{% block content %}
+<style>
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .feed-list {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .feed-item {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: transform 0.3s;
+    }
+    
+    .feed-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+    }
+    
+    .feed-item img {
+        width: 100%;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    .feed-item h2 {
+        color: #667eea;
+        margin-bottom: 1rem;
+    }
+    
+    .feed-item .content {
+        line-height: 1.8;
+        color: #495057;
+        margin-bottom: 1rem;
+    }
+    
+    .feed-item .date {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .no-feeds {
+        text-align: center;
+        padding: 3rem;
+        color: #6c757d;
+    }
+</style>
+
+<div class="page-header">
+    <h1>📰 News & Updates</h1>
+    <p>Stay updated with our latest announcements and promotions</p>
+</div>
+
+<div class="feed-list">
+    {% if news_feeds %}
+        {% for feed in news_feeds %}
+        <div class="feed-item">
+            {% if feed.image %}
+            <img src="{{ feed.image.url }}" alt="{{ feed.title }}">
+            {% endif %}
+            <h2>{{ feed.title }}</h2>
+            <div class="content">{{ feed.content|linebreaks }}</div>
+            <div class="date">Posted on {{ feed.created_at|date:"F d, Y" }}</div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="no-feeds">
+        <h2>No news available at the moment</h2>
+        <p>Check back soon for updates!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
