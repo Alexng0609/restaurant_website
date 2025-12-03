@@ -1,22 +1,25 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
 
-{% block title %}Home - Restaurant{% endblock %}
+{% block title %}Trang Chủ - Bò Nhúng Giấm Ngày Xưa{% endblock %}
 
 {% block content %}
 <style>
     .hero {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #D4A843 0%, #B8860B 100%);
         color: white;
         padding: 4rem 2rem;
         border-radius: 15px;
         text-align: center;
         margin-bottom: 3rem;
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        box-shadow: 0 10px 30px rgba(212, 168, 67, 0.3);
     }
     
     .hero h1 {
         font-size: 3rem;
         margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
     }
     
     .hero p {
@@ -28,7 +31,7 @@
     .section-title {
         font-size: 2rem;
         margin-bottom: 2rem;
-        color: #2c3e50;
+        color: var(--text-color);
         text-align: center;
     }
     
@@ -40,16 +43,17 @@
     }
     
     .news-card {
-        background: white;
+        background: var(--card-bg);
         border-radius: 10px;
         overflow: hidden;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 6px var(--shadow);
         transition: transform 0.3s;
+        border: 1px solid var(--border-color);
     }
     
     .news-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+        box-shadow: 0 8px 15px var(--shadow);
     }
     
     .news-card img {
@@ -63,32 +67,48 @@
     }
     
     .news-card h3 {
-        color: #667eea;
+        color: #D4A843;
         margin-bottom: 0.5rem;
     }
     
+    .news-card p {
+        color: var(--text-color);
+        opacity: 0.9;
+    }
+    
+    .news-card small {
+        color: var(--text-color);
+        opacity: 0.7;
+    }
+    
     .item-card {
-        background: white;
+        background: var(--card-bg);
         border-radius: 10px;
         padding: 1.5rem;
         text-align: center;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 6px var(--shadow);
         transition: transform 0.3s;
+        border: 1px solid var(--border-color);
     }
     
     .item-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+        box-shadow: 0 8px 15px var(--shadow);
     }
     
     .item-card h3 {
-        color: #2c3e50;
+        color: var(--text-color);
         margin-bottom: 0.5rem;
+    }
+    
+    .item-card p {
+        color: var(--text-color);
+        opacity: 0.8;
     }
     
     .item-card .price {
         font-size: 1.5rem;
-        color: #667eea;
+        color: #D4A843;
         font-weight: bold;
         margin-top: 1rem;
     }
@@ -96,33 +116,53 @@
     .cta-section {
         text-align: center;
         padding: 3rem 2rem;
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        background: linear-gradient(135deg, #E5B960 0%, #D4A843 100%);
         color: white;
         border-radius: 15px;
         margin-top: 3rem;
+        box-shadow: 0 10px 30px rgba(229, 185, 96, 0.3);
     }
     
     .cta-section h2 {
         font-size: 2.5rem;
         margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .cta-section p {
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    @media (max-width: 768px) {
+        .hero h1 {
+            font-size: 2rem;
+        }
+        
+        .hero p {
+            font-size: 1.1rem;
+        }
+        
+        .cta-section h2 {
+            font-size: 1.8rem;
+        }
     }
 </style>
 
-<div class="hero">
-    <h1>Welcome to Our Restaurant! 🍽️</h1>
-    <p>Experience culinary excellence with fresh ingredients and passionate cooking</p>
+<div class="hero card">
+    <h1>Chào Mừng Đến Với Bò Nhúng Giấm Ngày Xưa!</h1>
+    <p>Trải nghiệm hương vị truyền thống Việt Nam với nguyên liệu tươi ngon và đam mê ẩm thực</p>
     {% if user.is_authenticated %}
-        <a href="{% url 'menu' %}" class="btn">Browse Menu</a>
-        <a href="{% url 'place_order' %}" class="btn btn-secondary">Order Now</a>
+        <a href="{% url 'menu' %}" class="btn">Xem Thực Đơn</a>
+        <a href="{% url 'place_order' %}" class="btn btn-secondary">Đặt Món Ngay</a>
     {% else %}
-        <a href="{% url 'signup' %}" class="btn">Join Us Today</a>
-        <a href="{% url 'menu' %}" class="btn btn-secondary">View Menu</a>
+        <a href="{% url 'signup' %}" class="btn">Đăng Ký Ngay</a>
+        <a href="{% url 'menu' %}" class="btn btn-secondary">Xem Thực Đơn</a>
     {% endif %}
 </div>
 
 {% if latest_news %}
 <section>
-    <h2 class="section-title">📰 Latest News & Promotions</h2>
+    <h2 class="section-title">📰 Tin Tức & Khuyến Mãi Mới Nhất</h2>
     <div class="grid">
         {% for news in latest_news %}
         <div class="news-card">
@@ -132,42 +172,42 @@
             <div class="news-card-content">
                 <h3>{{ news.title }}</h3>
                 <p>{{ news.content|truncatewords:30 }}</p>
-                <small>{{ news.created_at|date:"F d, Y" }}</small>
+                <small>{{ news.created_at|date:"d/m/Y" }}</small>
             </div>
         </div>
         {% endfor %}
     </div>
     <div style="text-align: center;">
-        <a href="{% url 'feeds' %}" class="btn">View All News</a>
+        <a href="{% url 'feeds' %}" class="btn">Xem Tất Cả Tin Tức</a>
     </div>
 </section>
 {% endif %}
 
 {% if featured_items %}
 <section>
-    <h2 class="section-title">🌟 Featured Items</h2>
+    <h2 class="section-title">⭐ Món Ăn Nổi Bật</h2>
     <div class="grid">
         {% for item in featured_items %}
         <div class="item-card">
             <h3>{{ item.name }}</h3>
             <p>{{ item.description|truncatewords:15 }}</p>
-            <div class="price">${{ item.price }}</div>
+            <div class="price">{{ item.price|vnd_format }} <span class="currency">₫</span></div>
         </div>
         {% endfor %}
     </div>
     <div style="text-align: center;">
-        <a href="{% url 'menu' %}" class="btn">View Full Menu</a>
+        <a href="{% url 'menu' %}" class="btn">Xem Toàn Bộ Thực Đơn</a>
     </div>
 </section>
 {% endif %}
 
 <div class="cta-section">
-    <h2>Earn Rewards with Every Order! ⭐</h2>
+    <h2>Nhận Điểm Thưởng Với Mỗi Đơn Hàng! 🎁</h2>
     <p style="font-size: 1.2rem; margin-bottom: 2rem;">
-        Get 10% back in points on every purchase. Redeem for free items and VIP status!
+        Nhận lại 10% điểm cho mỗi lần mua hàng. Đổi điểm lấy món ăn miễn phí và trở thành VIP!
     </p>
     {% if not user.is_authenticated %}
-    <a href="{% url 'signup' %}" class="btn" style="background: white; color: #f5576c;">Sign Up Now</a>
+    <a href="{% url 'signup' %}" class="btn" style="background: white; color: #D4A843; font-weight: bold;">Đăng Ký Ngay</a>
     {% endif %}
 </div>
 {% endblock %}

@@ -1,0 +1,35 @@
+# Core Dependencies
+Django>=4.2,<5.0
+Pillow>=10.0.0
+
+# Production Server
+gunicorn>=21.2.0
+
+# Database (PostgreSQL for production)
+psycopg2-binary>=2.9.9
+
+# Environment Variables
+python-decouple>=3.8
+django-environ>=0.11.0
+
+# Whitenoise for static files in production
+whitenoise>=6.6.0
+
+# Django Extensions (optional but useful)
+django-extensions>=3.2.3
+
+# Security
+django-cors-headers>=4.3.1
+
+# Forms and validation
+django-crispy-forms>=2.1
+crispy-bootstrap5>=0.7
+
+# API (if you want to add REST API later)
+djangorestframework>=3.14.0
+
+# Timezone support
+pytz>=2023.3
+
+# Development Tools (optional - comment out for minimal install)
+django-debug-toolbar>=4.2.0

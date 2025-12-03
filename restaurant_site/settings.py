@@ -1,5 +1,5 @@
 """
-Django settings for restaurant_site project.
+Django settings for restaurant_site project with i18n support.
 """
 
 from pathlib import Path
@@ -27,12 +27,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "restaurant",
+    "restaurant.apps.RestaurantConfig",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",  # Language middleware
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -53,6 +54,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "django.template.context_processors.i18n",  # i18n context processor
             ],
         },
     },
@@ -87,12 +89,22 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-LANGUAGE_CODE = "en-us"
+# Internationalization (i18n)
+LANGUAGE_CODE = "en"  # Default language
+
+LANGUAGES = [
+    ("en", "English"),
+    ("vi", "Tiếng Việt"),
+]
+
+# Locale paths - where Django looks for translation files
+LOCALE_PATHS = [
+    BASE_DIR / "restaurant" / "locale",
+]
 
 TIME_ZONE = "UTC"
 
-USE_I18N = True
+USE_I18N = True  # Enable internationalization
 
 USE_TZ = True
 
@@ -114,3 +126,17 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "index"
 LOGOUT_REDIRECT_URL = "index"
+
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Static files configuration
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [
+    BASE_DIR / "restaurant" / "static",
+]
+
+# Media files
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"

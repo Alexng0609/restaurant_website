@@ -25,8 +25,8 @@ class MenuItem(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField()
     price = models.DecimalField(
-        max_digits=6, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))]
-    )
+        max_digits=10, decimal_places=0, validators=[MinValueValidator(Decimal("0"))]
+    )  # Updated for VND - supports up to 9,999,999,999
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, related_name="items"
     )
@@ -39,7 +39,7 @@ class MenuItem(models.Model):
         ordering = ["category", "name"]
 
     def __str__(self):
-        return f"{self.name} - ${self.price}"
+        return f"{self.name} - {self.price:,.0f} ₫"
 
 
 class NewsFeed(models.Model):
@@ -118,10 +118,28 @@ class Order(models.Model):
 
     customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="orders")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
-    total_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    total_amount = models.DecimalField(
+        max_digits=12, decimal_places=0, default=0
+    )  # Updated for VND
     points_earned = models.IntegerField(default=0)
-    discount_applied = models.DecimalField(max_digits=6, decimal_places=2, default=0)
+    discount_applied = models.DecimalField(
+        max_digits=12, decimal_places=0, default=0
+    )  # Updated for VND
     special_instructions = models.TextField(blank=True)
+    customer_name = models.CharField(max_length=200, blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    delivery_address = models.TextField(blank=True)
+    payment_method = models.CharField(
+        max_length=20,
+        blank=True,
+        choices=[
+            ("bank", "Chuyển Khoản Ngân Hàng"),
+            ("momo", "MoMo"),
+            ("cod", "Thanh Toán Khi Nhận Hàng"),
+        ],
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -156,8 +174,8 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
     menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
-    price = models.DecimalField(max_digits=6, decimal_places=2)
-    subtotal = models.DecimalField(max_digits=8, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=0)  # Updated for VND
+    subtotal = models.DecimalField(max_digits=12, decimal_places=0)  # Updated for VND
 
     def __str__(self):
         return f"{self.quantity}x {self.menu_item.name}"

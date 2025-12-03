@@ -1,0 +1,510 @@
+{% extends 'base_enhanced.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Menu" %} - {% trans "Bò Nhúng Giấm Ngày Xưa" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: fadeInDown 0.8s ease;
+    }
+    
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        color: var(--text-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .category-filter {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 3rem;
+    }
+    
+    .category-btn {
+        padding: 10px 25px;
+        border: 2px solid var(--primary-color);
+        background: var(--card-bg);
+        color: var(--primary-color);
+        border-radius: 25px;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .category-btn:hover,
+    .category-btn.active {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .menu-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+    
+    .menu-item {
+        background: var(--card-bg);
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px var(--shadow);
+        transition: var(--transition);
+        display: flex;
+        flex-direction: column;
+        cursor: pointer;
+    }
+    
+    .menu-item:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 12px 25px var(--shadow);
+    }
+    
+    .menu-item-image-container {
+        position: relative;
+        width: 100%;
+        height: 220px;
+        overflow: hidden;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    }
+    
+    .menu-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    
+    .menu-item:hover img {
+        transform: scale(1.15);
+    }
+    
+    .menu-item-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+        display: flex;
+        align-items: flex-end;
+        padding: 1rem;
+        opacity: 0;
+        transition: var(--transition);
+    }
+    
+    .menu-item:hover .menu-item-overlay {
+        opacity: 1;
+    }
+    
+    .view-gallery-btn {
+        background: white;
+        color: var(--primary-color);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .menu-item-content {
+        padding: 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .menu-item h3 {
+        color: var(--text-color);
+        margin-bottom: 0.5rem;
+        font-size: 1.3rem;
+    }
+    
+    .category-tag {
+        display: inline-block;
+        padding: 4px 12px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .description {
+        color: var(--text-color);
+        opacity: 0.8;
+        margin-bottom: 1rem;
+        flex-grow: 1;
+    }
+    
+    .price {
+        font-size: 1.8rem;
+        color: var(--primary-color);
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+    
+    .availability {
+        padding: 8px 15px;
+        border-radius: 5px;
+        text-align: center;
+        font-weight: 600;
+    }
+    
+    .available {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .unavailable {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    /* Image Gallery Modal */
+    .gallery-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .gallery-modal.active {
+        display: flex;
+    }
+    
+    .gallery-content {
+        max-width: 90%;
+        max-height: 90%;
+        position: relative;
+    }
+    
+    .gallery-image {
+        max-width: 100%;
+        max-height: 80vh;
+        border-radius: 10px;
+        box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+    }
+    
+    .gallery-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: white;
+        color: #333;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1.2rem;
+        z-index: 1001;
+    }
+    
+    .gallery-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255,255,255,0.9);
+        border: none;
+        padding: 15px 20px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.5rem;
+        transition: var(--transition);
+    }
+    
+    .gallery-nav:hover {
+        background: white;
+        transform: translateY(-50%) scale(1.1);
+    }
+    
+    .gallery-nav.prev {
+        left: 20px;
+    }
+    
+    .gallery-nav.next {
+        right: 20px;
+    }
+    
+    .gallery-info {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255,255,255,0.95);
+        padding: 15px 30px;
+        border-radius: 25px;
+        text-align: center;
+    }
+    
+    .gallery-info h3 {
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+    
+    .gallery-info p {
+        color: #666;
+        margin: 0;
+    }
+    
+    .no-items {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-color);
+    }
+    
+    @media (max-width: 768px) {
+        .menu-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .gallery-nav {
+            padding: 10px 15px;
+            font-size: 1.2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header fade-in">
+    <h1>🍜 {% trans "Our Menu" %}</h1>
+    <p>{% trans "Discover our delicious selection of dishes" %}</p>
+</div>
+
+<div class="category-filter">
+    <a href="{% url 'menu' %}" class="category-btn {% if not selected_category %}active{% endif %}">
+        {% trans "All Items" %}
+    </a>
+    {% for category in categories %}
+    <a href="{% url 'menu' %}?category={{ category.id }}" 
+       class="category-btn {% if selected_category == category.id|stringformat:'s' %}active{% endif %}">
+        {{ category.name }}
+    </a>
+    {% endfor %}
+</div>
+
+<div class="menu-grid">
+    {% if menu_items %}
+        {% for item in menu_items %}
+        <div class="menu-item card" data-item-id="{{ item.id }}">
+            <div class="menu-item-image-container" onclick="openGallery('{{ item.id }}', '{{ item.name }}', '{{ item.description }}', '{{ item.price }}')">
+                {% if item.image %}
+                <img src="{{ item.image.url }}" alt="{{ item.name }}" loading="lazy">
+                {% else %}
+                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 4rem;">
+                    <i class="fas fa-utensils"></i>
+                </div>
+                {% endif %}
+                <div class="menu-item-overlay">
+                    <button class="view-gallery-btn">
+                        <i class="fas fa-search-plus"></i>
+                        {% trans "View Details" %}
+                    </button>
+                </div>
+            </div>
+            <div class="menu-item-content">
+                <span class="category-tag">{{ item.category.name }}</span>
+                <h3>{{ item.name }}</h3>
+                <p class="description">{{ item.description }}</p>
+                <div class="price">${{ item.price }}</div>
+                <div class="availability {% if item.is_available %}available{% else %}unavailable{% endif %}">
+                    {% if item.is_available %}
+                        <i class="fas fa-check-circle"></i> {% trans "Available" %}
+                    {% else %}
+                        <i class="fas fa-times-circle"></i> {% trans "Currently Unavailable" %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="no-items" style="grid-column: 1 / -1;">
+        <i class="fas fa-inbox" style="font-size: 4rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+        <h2>{% trans "No items available" %}</h2>
+        <p>{% trans "Please check back later!" %}</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Image Gallery Modal -->
+<div class="gallery-modal" id="galleryModal">
+    <button class="gallery-close" onclick="closeGallery()">
+        <i class="fas fa-times"></i>
+    </button>
+    <button class="gallery-nav prev" onclick="changeGalleryImage(-1)">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+    <div class="gallery-content">
+        <img src="" alt="" class="gallery-image" id="galleryImage">
+        <div class="gallery-info">
+            <h3 id="galleryItemName"></h3>
+            <p id="galleryItemDesc"></p>
+            <p style="color: var(--primary-color); font-weight: bold; font-size: 1.5rem; margin-top: 0.5rem;" id="galleryItemPrice"></p>
+        </div>
+    </div>
+    <button class="gallery-nav next" onclick="changeGalleryImage(1)">
+        <i class="fas fa-chevron-right"></i>
+    </button>
+</div>
+
+<div style="text-align: center; margin-top: 2rem;">
+    {% if user.is_authenticated %}
+    <a href="{% url 'place_order' %}" class="btn">
+        <i class="fas fa-shopping-cart"></i> {% trans "Place an Order" %}
+    </a>
+    {% else %}
+    <a href="{% url 'signup' %}" class="btn">
+        <i class="fas fa-user-plus"></i> {% trans "Sign Up to Order" %}
+    </a>
+    {% endif %}
+</div>
+
+<script>
+    let currentGalleryIndex = 0;
+    let galleryItems = [];
+    
+    // Collect all menu items
+    document.addEventListener('DOMContentLoaded', function() {
+        const items = document.querySelectorAll('.menu-item');
+        items.forEach(item => {
+            const img = item.querySelector('img');
+            if (img) {
+                galleryItems.push({
+                    id: item.dataset.itemId,
+                    image: img.src,
+                    name: item.querySelector('h3').textContent,
+                    description: item.querySelector('.description').textContent,
+                    price: item.querySelector('.price').textContent
+                });
+            }
+        });
+    });
+    
+    function openGallery(itemId, name, description, price) {
+        const modal = document.getElementById('galleryModal');
+        const img = document.getElementById('galleryImage');
+        const nameEl = document.getElementById('galleryItemName');
+        const descEl = document.getElementById('galleryItemDesc');
+        const priceEl = document.getElementById('galleryItemPrice');
+        
+        // Find item index
+        currentGalleryIndex = galleryItems.findIndex(item => item.id === itemId);
+        
+        if (currentGalleryIndex !== -1 && galleryItems[currentGalleryIndex]) {
+            const item = galleryItems[currentGalleryIndex];
+            img.src = item.image;
+            nameEl.textContent = item.name;
+            descEl.textContent = item.description;
+            priceEl.textContent = item.price;
+            
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // Animate in
+            gsap.from('.gallery-content', {
+                scale: 0.8,
+                opacity: 0,
+                duration: 0.5,
+                ease: 'back.out'
+            });
+        }
+    }
+    
+    function closeGallery() {
+        const modal = document.getElementById('galleryModal');
+        
+        gsap.to('.gallery-content', {
+            scale: 0.8,
+            opacity: 0,
+            duration: 0.3,
+            onComplete: () => {
+                modal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+        });
+    }
+    
+    function changeGalleryImage(direction) {
+        if (galleryItems.length === 0) return;
+        
+        currentGalleryIndex += direction;
+        
+        if (currentGalleryIndex < 0) {
+            currentGalleryIndex = galleryItems.length - 1;
+        } else if (currentGalleryIndex >= galleryItems.length) {
+            currentGalleryIndex = 0;
+        }
+        
+        const item = galleryItems[currentGalleryIndex];
+        const img = document.getElementById('galleryImage');
+        const nameEl = document.getElementById('galleryItemName');
+        const descEl = document.getElementById('galleryItemDesc');
+        const priceEl = document.getElementById('galleryItemPrice');
+        
+        // Animate transition
+        gsap.to(img, {
+            opacity: 0,
+            duration: 0.2,
+            onComplete: () => {
+                img.src = item.image;
+                nameEl.textContent = item.name;
+                descEl.textContent = item.description;
+                priceEl.textContent = item.price;
+                gsap.to(img, { opacity: 1, duration: 0.2 });
+            }
+        });
+    }
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        const modal = document.getElementById('galleryModal');
+        if (modal.classList.contains('active')) {
+            if (e.key === 'Escape') {
+                closeGallery();
+            } else if (e.key === 'ArrowLeft') {
+                changeGalleryImage(-1);
+            } else if (e.key === 'ArrowRight') {
+                changeGalleryImage(1);
+            }
+        }
+    });
+    
+    // Close on background click
+    document.getElementById('galleryModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeGallery();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
-{% block title %}Order History - Restaurant{% endblock %}
+{% block title %}Lịch Sử Đặt Hàng - Bò Nhúng Giấm Ngày Xưa{% endblock %}
 
 {% block content %}
 <style>
@@ -11,7 +12,7 @@
     
     .page-header h1 {
         font-size: 2.5rem;
-        color: #2c3e50;
+        color: var(--text-color);
         margin-bottom: 0.5rem;
     }
     
@@ -23,44 +24,53 @@
     }
     
     .stat-card {
-        background: white;
+        background: var(--card-bg);
         border-radius: 10px;
         padding: 2rem;
         text-align: center;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 6px var(--shadow);
+        border: 1px solid var(--border-color);
     }
     
     .stat-card .value {
         font-size: 2.5rem;
         font-weight: bold;
-        color: #667eea;
+        color: var(--primary-color);
         margin-bottom: 0.5rem;
     }
     
     .stat-card .label {
-        color: #6c757d;
+        color: var(--text-color);
+        opacity: 0.8;
         font-size: 0.95rem;
     }
     
     .stat-card.vip {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        background: linear-gradient(135deg, #E5B960 0%, #D4A843 100%);
         color: white;
+        box-shadow: 0 4px 15px rgba(212, 168, 67, 0.3);
     }
     
     .stat-card.vip .value {
         color: white;
     }
     
+    .stat-card.vip .label {
+        color: white;
+        opacity: 1;
+    }
+    
     .rewards-section {
-        background: white;
+        background: var(--card-bg);
         border-radius: 10px;
         padding: 2rem;
         margin-bottom: 3rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 6px var(--shadow);
+        border: 1px solid var(--border-color);
     }
     
     .rewards-section h2 {
-        color: #2c3e50;
+        color: var(--text-color);
         margin-bottom: 1.5rem;
     }
     
@@ -71,11 +81,12 @@
     }
     
     .reward-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #D4A843 0%, #B8860B 100%);
         color: white;
         padding: 1.5rem;
         border-radius: 10px;
         text-align: center;
+        box-shadow: 0 4px 12px rgba(212, 168, 67, 0.3);
     }
     
     .reward-card h3 {
@@ -91,31 +102,34 @@
     
     .reward-card .btn {
         background: white;
-        color: #667eea;
+        color: var(--primary-color);
     }
     
     .reward-card.locked {
-        background: #e9ecef;
-        color: #6c757d;
+        background: var(--border-color);
+        color: var(--text-color);
+        opacity: 0.7;
     }
     
     .orders-section {
-        background: white;
+        background: var(--card-bg);
         border-radius: 10px;
         padding: 2rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 6px var(--shadow);
+        border: 1px solid var(--border-color);
     }
     
     .orders-section h2 {
-        color: #2c3e50;
+        color: var(--text-color);
         margin-bottom: 1.5rem;
     }
     
     .order-card {
-        border: 2px solid #e9ecef;
+        border: 2px solid var(--border-color);
         border-radius: 8px;
         padding: 1.5rem;
         margin-bottom: 1.5rem;
+        background: var(--card-bg);
     }
     
     .order-header {
@@ -129,7 +143,7 @@
     
     .order-id {
         font-weight: bold;
-        color: #2c3e50;
+        color: var(--text-color);
     }
     
     .order-status {
@@ -152,7 +166,8 @@
     
     .order-item {
         padding: 0.5rem 0;
-        color: #495057;
+        color: var(--text-color);
+        opacity: 0.9;
     }
     
     .order-footer {
@@ -160,130 +175,132 @@
         justify-content: space-between;
         align-items: center;
         padding-top: 1rem;
-        border-top: 1px solid #e9ecef;
+        border-top: 1px solid var(--border-color);
         flex-wrap: wrap;
         gap: 1rem;
     }
     
     .order-date {
-        color: #6c757d;
+        color: var(--text-color);
+        opacity: 0.7;
         font-size: 0.9rem;
     }
     
     .order-total {
         font-size: 1.3rem;
         font-weight: bold;
-        color: #667eea;
+        color: var(--primary-color);
     }
     
     .no-orders {
         text-align: center;
         padding: 3rem;
-        color: #6c757d;
+        color: var(--text-color);
+        opacity: 0.8;
     }
 </style>
 
 <div class="page-header">
-    <h1>📜 Order History & Rewards</h1>
-    <p>Track your orders and redeem rewards</p>
+    <h1>📜 Lịch Sử Đặt Hàng & Điểm Thưởng</h1>
+    <p>Theo dõi đơn hàng và đổi điểm thưởng</p>
 </div>
 
 <div class="profile-stats">
     <div class="stat-card">
         <div class="value">{{ profile.points }}</div>
-        <div class="label">Reward Points</div>
+        <div class="label">Điểm Thưởng</div>
     </div>
     <div class="stat-card">
         <div class="value">{{ orders.count }}</div>
-        <div class="label">Total Orders</div>
+        <div class="label">Tổng Đơn Hàng</div>
     </div>
     {% if profile.is_vip %}
     <div class="stat-card vip">
         <div class="value">⭐ VIP</div>
-        <div class="label">Member Since {{ profile.vip_since|date:"M Y" }}</div>
+        <div class="label">Thành Viên Từ {{ profile.vip_since|date:"m/Y" }}</div>
     </div>
     {% endif %}
 </div>
 
 <div class="rewards-section">
-    <h2>🎁 Available Rewards</h2>
+    <h2>🎁 Phần Thưởng Có Sẵn</h2>
     {% if available_rewards %}
     <div class="rewards-grid">
         {% for reward in available_rewards %}
         <div class="reward-card">
             <h3>{{ reward.name }}</h3>
-            <p class="points">{{ reward.points }} Points Required</p>
-            <p>You have {{ profile.points }} points</p>
+            <p class="points">{{ reward.points_required }} Điểm Cần Thiết</p>
+            <p>Bạn có {{ profile.points }} điểm</p>
         </div>
         {% endfor %}
     </div>
-    <p style="margin-top: 1.5rem; color: #6c757d;">
-        <strong>Reward Tiers:</strong><br>
-        🍰 100 points → Free Dessert<br>
-        🍝 250 points → Free Main Dish<br>
-        🎉 500 points → VIP Status (10% off all orders)
+    <p style="margin-top: 1.5rem; color: var(--text-color); opacity: 0.8;">
+        <strong>Các Cấp Phần Thưởng:</strong><br>
+        🍰 100 điểm → Món tráng miệng miễn phí<br>
+        🍝 250 điểm → Món chính miễn phí<br>
+        🎉 500 điểm → Trạng thái VIP (Giảm 10% tất cả đơn hàng)
     </p>
     {% else %}
-    <p style="color: #6c757d;">Keep ordering to earn points and unlock rewards! You currently have {{ profile.points }} points.</p>
+    <p style="color: var(--text-color); opacity: 0.8;">Tiếp tục đặt hàng để nhận điểm và mở khóa phần thưởng! Bạn hiện có {{ profile.points }} điểm.</p>
     {% endif %}
 </div>
 
 {% if redemptions %}
 <div class="rewards-section">
-    <h2>🎯 Redemption History</h2>
+    <h2>🎯 Lịch Sử Đổi Thưởng</h2>
     {% for redemption in redemptions %}
     <div class="order-item">
-        <strong>{{ redemption.reward.name }}</strong> - {{ redemption.points_spent }} points - 
-        <span style="color: #6c757d;">{{ redemption.redeemed_at|date:"M d, Y" }}</span>
+        <strong>{{ redemption.reward.name }}</strong> - {{ redemption.points_spent }} điểm - 
+        <span style="color: var(--text-color); opacity: 0.7;">{{ redemption.redeemed_at|date:"d/m/Y" }}</span>
     </div>
     {% endfor %}
 </div>
 {% endif %}
 
 <div class="orders-section">
-    <h2>📦 Your Orders</h2>
+    <h2>📦 Đơn Hàng Của Bạn</h2>
     {% if orders %}
         {% for order in orders %}
         <div class="order-card">
             <div class="order-header">
-                <span class="order-id">Order #{{ order.id }}</span>
+                <span class="order-id">Đơn Hàng #{{ order.id }}</span>
                 <span class="order-status {{ order.status }}">{{ order.get_status_display }}</span>
             </div>
             
             <div class="order-items">
                 {% for item in order.items.all %}
                 <div class="order-item">
-                    {{ item.quantity }}x {{ item.menu_item.name }} - ${{ item.subtotal }}
+                    {{ item.quantity }}x {{ item.menu_item.name }} - {{ item.subtotal|vnd_format }} ₫
                 </div>
                 {% endfor %}
                 {% if order.special_instructions %}
-                <div class="order-item" style="font-style: italic; color: #6c757d;">
-                    Note: {{ order.special_instructions }}
+                <div class="order-item" style="font-style: italic; opacity: 0.7;">
+                    Ghi chú: {{ order.special_instructions }}
                 </div>
                 {% endif %}
             </div>
             
             <div class="order-footer">
                 <div>
-                    <div class="order-date">{{ order.created_at|date:"F d, Y - g:i A" }}</div>
+                    <div class="order-date">{{ order.created_at|date:"d/m/Y - H:i" }}</div>
                     <div style="color: #28a745; margin-top: 0.3rem;">
-                        ⭐ +{{ order.points_earned }} points earned
+                        ⭐ +{{ order.points_earned }} điểm đã nhận
                     </div>
                     {% if order.discount_applied > 0 %}
-                    <div style="color: #f5576c; margin-top: 0.3rem;">
-                        💰 VIP Discount: -${{ order.discount_applied }}
+                    <div style="color: var(--primary-color); margin-top: 0.3rem;">
+                        💰 Giảm Giá VIP: -{{ order.discount_applied|vnd_format }} ₫
                     </div>
                     {% endif %}
                 </div>
-                <div class="order-total">${{ order.total_amount }}</div>
+                <div class="order-total">{{ order.total_amount|vnd_format }} ₫</div>
             </div>
         </div>
         {% endfor %}
     {% else %}
     <div class="no-orders">
-        <h2>No orders yet</h2>
-        <p>Start ordering to earn rewards!</p>
-        <a href="{% url 'menu' %}" class="btn" style="margin-top: 1rem;">Browse Menu</a>
+        <h2>Chưa có đơn hàng</h2>
+        <p>Bắt đầu đặt hàng để nhận điểm thưởng!</p>
+        <a href="{% url 'menu' %}" class="btn" style="margin-top: 1rem;">Xem Thực Đơn</a>
     </div>
     {% endif %}
 </div>

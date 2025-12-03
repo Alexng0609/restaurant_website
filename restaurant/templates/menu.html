@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
 
-{% block title %}Menu - Restaurant{% endblock %}
+{% block title %}Thực Đơn - Bò Nhúng Giấm Ngày Xưa{% endblock %}
 
 {% block content %}
 <style>
@@ -11,7 +13,7 @@
     
     .page-header h1 {
         font-size: 2.5rem;
-        color: #2c3e50;
+        color: var(--text-color);
         margin-bottom: 0.5rem;
     }
     
@@ -25,19 +27,21 @@
     
     .category-btn {
         padding: 10px 25px;
-        border: 2px solid #667eea;
-        background: white;
-        color: #667eea;
+        border: 2px solid var(--primary-color);
+        background: var(--card-bg);
+        color: var(--primary-color);
         border-radius: 25px;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: var(--transition);
         text-decoration: none;
+        font-weight: 600;
     }
     
     .category-btn:hover,
     .category-btn.active {
-        background: #667eea;
+        background: var(--nav-bg);
         color: white;
+        border-color: var(--primary-color);
     }
     
     .menu-grid {
@@ -48,18 +52,31 @@
     }
     
     .menu-item {
-        background: white;
+        background: var(--card-bg);
         border-radius: 10px;
         overflow: hidden;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        transition: transform 0.3s;
+        box-shadow: 0 4px 6px var(--shadow);
+        transition: transform 0.3s, box-shadow 0.3s;
         display: flex;
         flex-direction: column;
+        cursor: pointer;
+        border: 2px solid transparent;
     }
     
     .menu-item:hover {
         transform: translateY(-5px);
-        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+        box-shadow: 0 8px 15px var(--shadow);
+        border-color: var(--primary-color);
+    }
+    
+    .menu-item.unavailable {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .menu-item.unavailable:hover {
+        transform: none;
+        border-color: transparent;
     }
     
     .menu-item img {
@@ -76,7 +93,7 @@
     }
     
     .menu-item h3 {
-        color: #2c3e50;
+        color: var(--text-color);
         margin-bottom: 0.5rem;
         font-size: 1.3rem;
     }
@@ -84,24 +101,56 @@
     .menu-item .category-tag {
         display: inline-block;
         padding: 4px 12px;
-        background: #e9ecef;
-        color: #495057;
+        background: var(--border-color);
+        color: var(--text-color);
         border-radius: 15px;
         font-size: 0.85rem;
         margin-bottom: 0.5rem;
+        align-self: flex-start;
     }
     
     .menu-item .description {
-        color: #6c757d;
+        color: var(--text-color);
+        opacity: 0.8;
         margin-bottom: 1rem;
         flex-grow: 1;
+        font-size: 0.95rem;
     }
     
     .menu-item .price {
         font-size: 1.8rem;
-        color: #667eea;
+        color: var(--primary-color);
         font-weight: bold;
         margin-bottom: 1rem;
+    }
+    
+    .menu-item .add-btn {
+        padding: 12px 20px;
+        background: var(--nav-bg);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .menu-item .add-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px var(--shadow);
+    }
+    
+    .menu-item .add-btn:active {
+        transform: translateY(0);
+    }
+    
+    .menu-item .add-btn.added {
+        background: #28a745;
     }
     
     .menu-item .availability {
@@ -109,6 +158,7 @@
         border-radius: 5px;
         text-align: center;
         font-weight: 600;
+        margin-bottom: 1rem;
     }
     
     .menu-item .available {
@@ -116,7 +166,7 @@
         color: #155724;
     }
     
-    .menu-item .unavailable {
+    .menu-item .unavailable-badge {
         background: #f8d7da;
         color: #721c24;
     }
@@ -124,20 +174,113 @@
     .no-items {
         text-align: center;
         padding: 3rem;
-        color: #6c757d;
+        color: var(--text-color);
+        opacity: 0.8;
+    }
+    
+    /* Cart Summary */
+    .cart-summary {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: var(--nav-bg);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        min-width: 280px;
+        z-index: 1000;
+        display: none;
+    }
+    
+    .cart-summary.show {
+        display: block;
+        animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .cart-summary h3 {
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+    }
+    
+    .cart-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .cart-total {
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 2px solid rgba(255,255,255,0.3);
+        display: flex;
+        justify-content: space-between;
+    }
+    
+    .cart-actions {
+        margin-top: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .cart-btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+    
+    .checkout-btn {
+        background: white;
+        color: var(--primary-color);
+    }
+    
+    .clear-btn {
+        background: transparent;
+        color: white;
+        border: 2px solid white;
+    }
+    
+    .cart-btn:hover {
+        transform: scale(1.05);
+    }
+    
+    @media (max-width: 768px) {
+        .cart-summary {
+            left: 20px;
+            right: 20px;
+            min-width: auto;
+        }
     }
 </style>
 
 <div class="page-header">
-    <h1>🍔 Our Menu</h1>
-    <p>Discover our delicious selection of dishes</p>
+    <h1>Thực Đơn</h1>
+    <p>Khám phá các món ăn ngon của chúng tôi</p>
 </div>
 
 <div class="category-filter">
-    <a href="{% url 'menu' %}" class="category-btn {% if not selected_category %}active{% endif %}">All Items</a>
+    <a href="{% url 'menu' %}" class="category-btn {% if not request.GET.category %}active{% endif %}">Tất Cả</a>
     {% for category in categories %}
     <a href="{% url 'menu' %}?category={{ category.id }}" 
-       class="category-btn {% if selected_category == category.id|stringformat:'s' %}active{% endif %}">
+       class="category-btn {% if request.GET.category == category.id|stringformat:'s' %}active{% endif %}">
         {{ category.name }}
     </a>
     {% endfor %}
@@ -146,40 +289,223 @@
 <div class="menu-grid">
     {% if menu_items %}
         {% for item in menu_items %}
-        <div class="menu-item">
+        <div class="menu-item {% if not item.is_available %}unavailable{% endif %}" 
+             data-id="{{ item.id }}"
+             data-name="{{ item.name }}"
+             data-price="{{ item.price }}">
             {% if item.image %}
             <img src="{{ item.image.url }}" alt="{{ item.name }}">
             {% else %}
-            <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+            <div style="width: 100%; height: 200px; background: var(--nav-bg);"></div>
             {% endif %}
             <div class="menu-item-content">
                 <span class="category-tag">{{ item.category.name }}</span>
                 <h3>{{ item.name }}</h3>
                 <p class="description">{{ item.description }}</p>
-                <div class="price">${{ item.price }}</div>
-                <div class="availability {% if item.is_available %}available{% else %}unavailable{% endif %}">
-                    {% if item.is_available %}
-                        ✓ Available
+                <div class="price">{{ item.price|vnd_format }} <span class="currency">₫</span></div>
+                
+                {% if item.is_available %}
+                    {% if user.is_authenticated %}
+                    <button class="add-btn" onclick="addToCart({{ item.id }}, '{{ item.name }}', {{ item.price }})">
+                        <i class="fas fa-plus"></i> Thêm Vào Giỏ
+                    </button>
                     {% else %}
-                        ✗ Currently Unavailable
+                    <a href="{% url 'login' %}" class="add-btn" style="text-decoration: none;">
+                        <i class="fas fa-sign-in-alt"></i> Đăng Nhập Để Đặt
+                    </a>
                     {% endif %}
+                {% else %}
+                <div class="availability unavailable-badge">
+                    ✗ Tạm Hết Hàng
                 </div>
+                {% endif %}
             </div>
         </div>
         {% endfor %}
     {% else %}
     <div class="no-items" style="grid-column: 1 / -1;">
-        <h2>No items available</h2>
-        <p>Please check back later!</p>
+        <h2>Chưa có món ăn</h2>
+        <p>Vui lòng quay lại sau!</p>
     </div>
     {% endif %}
 </div>
 
-<div style="text-align: center; margin-top: 2rem;">
-    {% if user.is_authenticated %}
-    <a href="{% url 'place_order' %}" class="btn">Place an Order</a>
-    {% else %}
-    <a href="{% url 'signup' %}" class="btn">Sign Up to Order</a>
-    {% endif %}
+{% if user.is_authenticated %}
+<!-- Cart Summary -->
+<div class="cart-summary" id="cartSummary">
+    <h3>🛒 Giỏ Hàng Của Bạn</h3>
+    <div id="cartItems"></div>
+    <div class="cart-total">
+        <span>Tổng Cộng:</span>
+        <span id="cartTotal">0 ₫</span>
+    </div>
+    <div class="cart-actions">
+        <button class="cart-btn checkout-btn" onclick="proceedToOrder()">
+            <i class="fas fa-shopping-cart"></i> Đặt Hàng Ngay
+        </button>
+        <button class="cart-btn clear-btn" onclick="clearCart()">
+            <i class="fas fa-trash"></i> Xóa Giỏ Hàng
+        </button>
+    </div>
 </div>
+{% endif %}
+
+<script>
+// Cart management
+let cart = JSON.parse(localStorage.getItem('restaurantCart')) || [];
+
+// Update cart display
+function updateCartDisplay() {
+    const cartSummary = document.getElementById('cartSummary');
+    const cartItems = document.getElementById('cartItems');
+    const cartTotal = document.getElementById('cartTotal');
+    
+    if (cart.length === 0) {
+        cartSummary.classList.remove('show');
+        return;
+    }
+    
+    cartSummary.classList.add('show');
+    
+    // Group items by ID and count quantities
+    const groupedCart = cart.reduce((acc, item) => {
+        if (acc[item.id]) {
+            acc[item.id].quantity++;
+        } else {
+            acc[item.id] = { ...item, quantity: 1 };
+        }
+        return acc;
+    }, {});
+    
+    // Display cart items
+    cartItems.innerHTML = Object.values(groupedCart).map(item => `
+        <div class="cart-item">
+            <span>${item.name} x${item.quantity}</span>
+            <span>${(item.price * item.quantity).toLocaleString('vi-VN')} ₫</span>
+        </div>
+    `).join('');
+    
+    // Calculate total
+    const total = cart.reduce((sum, item) => sum + parseFloat(item.price), 0);
+    cartTotal.textContent = total.toLocaleString('vi-VN') + ' ₫';
+    
+    // Update button states
+    updateButtonStates();
+}
+
+// Add item to cart
+function addToCart(id, name, price) {
+    cart.push({ id, name, price });
+    localStorage.setItem('restaurantCart', JSON.stringify(cart));
+    updateCartDisplay();
+    
+    // Visual feedback
+    const button = event.target.closest('.add-btn');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check"></i> Đã Thêm!';
+    button.classList.add('added');
+    
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.classList.remove('added');
+    }, 1000);
+    
+    // Show success animation
+    showNotification('Đã thêm vào giỏ hàng!');
+}
+
+// Clear cart
+function clearCart() {
+    if (confirm('Bạn có chắc muốn xóa toàn bộ giỏ hàng?')) {
+        cart = [];
+        localStorage.setItem('restaurantCart', JSON.stringify(cart));
+        updateCartDisplay();
+        showNotification('Đã xóa giỏ hàng');
+    }
+}
+
+// Proceed to order
+function proceedToOrder() {
+    if (cart.length === 0) {
+        alert('Giỏ hàng trống! Vui lòng thêm món ăn.');
+        return;
+    }
+    
+    // Store cart in sessionStorage for order page
+    sessionStorage.setItem('menuCart', JSON.stringify(cart));
+    window.location.href = "{% url 'place_order' %}";
+}
+
+// Update button states
+function updateButtonStates() {
+    const itemsInCart = cart.reduce((acc, item) => {
+        acc[item.id] = (acc[item.id] || 0) + 1;
+        return acc;
+    }, {});
+    
+    document.querySelectorAll('.menu-item').forEach(item => {
+        const id = item.dataset.id;
+        const btn = item.querySelector('.add-btn');
+        if (btn && itemsInCart[id]) {
+            const count = itemsInCart[id];
+            // Visual indicator that item is in cart (optional)
+        }
+    });
+}
+
+// Show notification
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: #28a745;
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 2000);
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateCartDisplay();
+});
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    @keyframes slideOut {
+        from {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
 {% endblock %}

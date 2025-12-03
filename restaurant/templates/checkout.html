@@ -1,0 +1,456 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Xác Nhận Đơn Hàng - Bò Nhúng Giấm Ngày Xưa{% endblock %}
+
+{% block content %}
+<style>
+    .checkout-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        color: var(--text-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .checkout-card {
+        background: var(--card-bg);
+        border-radius: 10px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px var(--shadow);
+        border: 1px solid var(--border-color);
+    }
+    
+    .checkout-card h2 {
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--primary-color);
+    }
+    
+    .order-summary {
+        margin-bottom: 2rem;
+    }
+    
+    .order-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .order-item:last-child {
+        border-bottom: none;
+    }
+    
+    .item-name {
+        font-weight: 600;
+        color: var(--text-color);
+    }
+    
+    .item-price {
+        color: var(--primary-color);
+        font-weight: bold;
+    }
+    
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem 0;
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: var(--primary-color);
+        border-top: 2px solid var(--primary-color);
+        margin-top: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--text-color);
+    }
+    
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: var(--transition);
+        background: var(--card-bg);
+        color: var(--text-color);
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(212, 168, 67, 0.1);
+    }
+    
+    .form-group small {
+        display: block;
+        margin-top: 0.5rem;
+        color: var(--text-color);
+        opacity: 0.7;
+        font-size: 0.9rem;
+    }
+    
+    .payment-methods {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .payment-option {
+        background: var(--card-bg);
+        border: 2px solid var(--border-color);
+        border-radius: 10px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: var(--transition);
+        text-align: center;
+    }
+    
+    .payment-option:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 12px rgba(212, 168, 67, 0.2);
+    }
+    
+    .payment-option.selected {
+        border-color: var(--primary-color);
+        background: rgba(212, 168, 67, 0.1);
+    }
+    
+    .payment-option input[type="radio"] {
+        display: none;
+    }
+    
+    .payment-option label {
+        cursor: pointer;
+        display: block;
+    }
+    
+    .payment-icon {
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .payment-name {
+        font-weight: 600;
+        color: var(--text-color);
+        margin-bottom: 0.3rem;
+    }
+    
+    .payment-desc {
+        font-size: 0.9rem;
+        color: var(--text-color);
+        opacity: 0.7;
+    }
+    
+    .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    .alert-info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+    }
+    
+    .btn-container {
+        display: flex;
+        gap: 1rem;
+        justify-content: space-between;
+    }
+    
+    .btn-secondary {
+        background: var(--card-bg);
+        color: var(--primary-color);
+        border: 2px solid var(--primary-color);
+    }
+    
+    .btn-secondary:hover {
+        background: var(--border-color);
+    }
+    
+    @media (max-width: 768px) {
+        .btn-container {
+            flex-direction: column;
+        }
+        
+        .payment-methods {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="checkout-container">
+    <div class="page-header">
+        <h1>🛒 Xác Nhận Đơn Hàng</h1>
+        <p>Vui lòng kiểm tra đơn hàng và điền thông tin giao hàng</p>
+    </div>
+    
+    <form method="post" id="checkoutForm">
+        {% csrf_token %}
+        
+        <!-- Order Summary -->
+        <div class="checkout-card">
+            <h2>📦 Chi Tiết Đơn Hàng</h2>
+            <div class="order-summary" id="orderSummary">
+                <!-- Order items will be populated by JavaScript -->
+            </div>
+            <div class="total-row">
+                <span>Tổng Cộng:</span>
+                <span id="totalAmount">0 ₫</span>
+            </div>
+        </div>
+        
+        <!-- Delivery Address -->
+        <div class="checkout-card">
+            <h2>📍 Địa Chỉ Giao Hàng</h2>
+            
+            <div class="form-group">
+                <label for="customer_name">Tên Người Nhận <span style="color: red;">*</span></label>
+                <input type="text" 
+                       id="customer_name" 
+                       name="customer_name" 
+                       value="{{ user.get_full_name }}"
+                       placeholder="Nhập tên người nhận"
+                       required>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">Số Điện Thoại <span style="color: red;">*</span></label>
+                <input type="tel" 
+                       id="phone" 
+                       name="phone" 
+                       value="{{ profile.phone }}"
+                       placeholder="Nhập số điện thoại"
+                       required>
+                <small>Chúng tôi sẽ gọi để xác nhận đơn hàng</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="delivery_address">Địa Chỉ Giao Hàng <span style="color: red;">*</span></label>
+                <textarea id="delivery_address" 
+                          name="delivery_address" 
+                          rows="3" 
+                          placeholder="Số nhà, tên đường, phường/xã, quận/huyện, thành phố"
+                          required>{{ profile.address }}</textarea>
+                <small>Vui lòng cung cấp địa chỉ chi tiết để giao hàng chính xác</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="special_instructions">Ghi Chú (Tùy chọn)</label>
+                <textarea id="special_instructions" 
+                          name="special_instructions" 
+                          rows="2" 
+                          placeholder="Ghi chú đặc biệt cho đơn hàng..."></textarea>
+            </div>
+        </div>
+        
+        <!-- Payment Method -->
+        <div class="checkout-card">
+            <h2>💳 Phương Thức Thanh Toán</h2>
+            
+            <div class="alert alert-info">
+                <strong>💡 Lưu ý:</strong> Vui lòng chọn phương thức thanh toán. Đơn hàng sẽ được xác nhận sau khi thanh toán thành công.
+            </div>
+            
+            <div class="payment-methods">
+                <!-- Bank Transfer -->
+                <div class="payment-option" onclick="selectPayment('bank')">
+                    <input type="radio" name="payment_method" id="payment_bank" value="bank" required>
+                    <label for="payment_bank">
+                        <div class="payment-icon">🏦</div>
+                        <div class="payment-name">Chuyển Khoản Ngân Hàng</div>
+                        <div class="payment-desc">Chuyển khoản trực tiếp</div>
+                    </label>
+                </div>
+                
+                <!-- MoMo -->
+                <div class="payment-option" onclick="selectPayment('momo')">
+                    <input type="radio" name="payment_method" id="payment_momo" value="momo">
+                    <label for="payment_momo">
+                        <div class="payment-icon">📱</div>
+                        <div class="payment-name">MoMo</div>
+                        <div class="payment-desc">Ví điện tử MoMo</div>
+                    </label>
+                </div>
+                
+                <!-- Cash on Delivery -->
+                <div class="payment-option" onclick="selectPayment('cod')">
+                    <input type="radio" name="payment_method" id="payment_cod" value="cod">
+                    <label for="payment_cod">
+                        <div class="payment-icon">💵</div>
+                        <div class="payment-name">Thanh Toán Khi Nhận Hàng</div>
+                        <div class="payment-desc">Tiền mặt khi giao hàng</div>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Bank Transfer Info (Hidden by default) -->
+            <div id="bankInfo" style="display: none; margin-top: 1.5rem; padding: 1.5rem; background: rgba(212, 168, 67, 0.1); border-radius: 8px; border: 1px solid var(--primary-color);">
+                <h3 style="color: var(--primary-color); margin-bottom: 1rem;">Thông Tin Chuyển Khoản:</h3>
+                <p><strong>Ngân hàng:</strong> Vietcombank</p>
+                <p><strong>Số tài khoản:</strong> 1234567890</p>
+                <p><strong>Chủ tài khoản:</strong> BÒ NHÚNG GIẤM NGÀY XƯA</p>
+                <p><strong>Nội dung:</strong> <span id="transferContent">[Tên] - [SĐT]</span></p>
+                <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-color); opacity: 0.8;">
+                    <em>💡 Sau khi chuyển khoản, vui lòng gửi ảnh chụp màn hình biên lai về Zalo/Facebook của chúng tôi để xác nhận.</em>
+                </p>
+            </div>
+            
+            <!-- MoMo Info (Hidden by default) -->
+            <div id="momoInfo" style="display: none; margin-top: 1.5rem; padding: 1.5rem; background: rgba(212, 168, 67, 0.1); border-radius: 8px; border: 1px solid var(--primary-color);">
+                <h3 style="color: var(--primary-color); margin-bottom: 1rem;">Thanh Toán MoMo:</h3>
+                <p><strong>Số điện thoại MoMo:</strong> 070 662 3568</p>
+                <p><strong>Tên:</strong> Bò Nhúng Giấm Ngày Xưa</p>
+                <p><strong>Nội dung:</strong> <span id="momoContent">[Tên] - [SĐT]</span></p>
+                <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-color); opacity: 0.8;">
+                    <em>💡 Quét mã QR hoặc chuyển tiền đến số điện thoại trên với nội dung chính xác.</em>
+                </p>
+            </div>
+        </div>
+        
+        <!-- Hidden fields for cart items -->
+        <div id="cartItemsInput"></div>
+        
+        <!-- Action Buttons -->
+        <div class="btn-container">
+            <a href="{% url 'place_order' %}" class="btn btn-secondary">← Quay Lại</a>
+            <button type="submit" class="btn">Xác Nhận Đặt Hàng →</button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Format VND
+function formatVND(number) {
+    number = Math.floor(number);
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+// Load cart from sessionStorage
+function loadCart() {
+    const cart = JSON.parse(sessionStorage.getItem('checkoutCart') || '[]');
+    if (cart.length === 0) {
+        window.location.href = '{% url "place_order" %}';
+        return;
+    }
+    
+    const summaryDiv = document.getElementById('orderSummary');
+    const cartItemsInput = document.getElementById('cartItemsInput');
+    let total = 0;
+    
+    cart.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        total += itemTotal;
+        
+        // Display order item
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'order-item';
+        itemDiv.innerHTML = `
+            <div>
+                <span class="item-name">${item.name}</span>
+                <span style="color: var(--text-color); opacity: 0.7;"> × ${item.quantity}</span>
+            </div>
+            <div class="item-price">${formatVND(itemTotal)} ₫</div>
+        `;
+        summaryDiv.appendChild(itemDiv);
+        
+        // Hidden input for form submission
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = `quantity_${item.id}`;
+        input.value = item.quantity;
+        cartItemsInput.appendChild(input);
+    });
+    
+    document.getElementById('totalAmount').textContent = `${formatVND(total)} ₫`;
+}
+
+// Select payment method
+function selectPayment(method) {
+    // Remove selected class from all
+    document.querySelectorAll('.payment-option').forEach(opt => {
+        opt.classList.remove('selected');
+    });
+    
+    // Add selected class
+    event.currentTarget.classList.add('selected');
+    
+    // Check the radio button
+    document.getElementById(`payment_${method}`).checked = true;
+    
+    // Hide all info boxes
+    document.getElementById('bankInfo').style.display = 'none';
+    document.getElementById('momoInfo').style.display = 'none';
+    
+    // Show relevant info
+    if (method === 'bank') {
+        document.getElementById('bankInfo').style.display = 'block';
+        updateTransferContent();
+    } else if (method === 'momo') {
+        document.getElementById('momoInfo').style.display = 'block';
+        updateTransferContent();
+    }
+}
+
+// Update transfer content with name and phone
+function updateTransferContent() {
+    const name = document.getElementById('customer_name').value || '[Tên]';
+    const phone = document.getElementById('phone').value || '[SĐT]';
+    const content = `${name} - ${phone}`;
+    document.getElementById('transferContent').textContent = content;
+    document.getElementById('momoContent').textContent = content;
+}
+
+// Update content when name or phone changes
+document.getElementById('customer_name').addEventListener('input', updateTransferContent);
+document.getElementById('phone').addEventListener('input', updateTransferContent);
+
+// Form validation
+document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
+    if (!paymentMethod) {
+        e.preventDefault();
+        alert('Vui lòng chọn phương thức thanh toán!');
+        return false;
+    }
+    
+    const name = document.getElementById('customer_name').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const address = document.getElementById('delivery_address').value.trim();
+    
+    if (!name || !phone || !address) {
+        e.preventDefault();
+        alert('Vui lòng điền đầy đủ thông tin giao hàng!');
+        return false;
+    }
+});
+
+// Load cart on page load
+document.addEventListener('DOMContentLoaded', loadCart);
+</script>
+{% endblock %}

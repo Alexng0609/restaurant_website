@@ -174,12 +174,15 @@ def signup_view(request):
         return redirect("index")
 
     if request.method == "POST":
-        form = UserCreationForm(request.POST)
+        from .forms import CustomSignUpForm
+
+        form = CustomSignUpForm(request.POST)
         if form.is_valid():
             user = form.save()
             username = form.cleaned_data.get("username")
             messages.success(
-                request, f"Account created for {username}! You can now log in."
+                request,
+                f"Tài khoản đã được tạo cho {username}! Bạn có thể đăng nhập ngay.",
             )
             login(request, user)
             return redirect("index")
@@ -188,7 +191,9 @@ def signup_view(request):
                 for error in errors:
                     messages.error(request, f"{field}: {error}")
     else:
-        form = UserCreationForm()
+        from .forms import CustomSignUpForm
+
+        form = CustomSignUpForm()
 
     return render(request, "signup.html", {"form": form})
 
@@ -241,3 +246,103 @@ def profile_view(request):
         "profile": profile,
     }
     return render(request, "profile.html", context)
+
+
+# Add these new views to your views.py file
+
+
+@login_required
+def checkout(request):
+    """Checkout page with delivery address and payment"""
+    # Get customer profile
+    profile = None
+    if hasattr(request.user, "profile"):
+        profile = request.user.profile
+
+    if request.method == "POST":
+        try:
+            with transaction.atomic():
+                # Get delivery information
+                customer_name = request.POST.get("customer_name", "").strip()
+                phone = request.POST.get("phone", "").strip()
+                delivery_address = request.POST.get("delivery_address", "").strip()
+                payment_method = request.POST.get("payment_method", "").strip()
+                special_instructions = request.POST.get(
+                    "special_instructions", ""
+                ).strip()
+
+                # Validate required fields
+                if not all([customer_name, phone, delivery_address, payment_method]):
+                    messages.error(request, "Vui lòng điền đầy đủ thông tin giao hàng!")
+                    return redirect("checkout")
+
+                # Create the order
+                order = Order.objects.create(
+                    customer=request.user,
+                    customer_name=customer_name,
+                    phone=phone,
+                    delivery_address=delivery_address,
+                    payment_method=payment_method,
+                    special_instructions=special_instructions,
+                )
+
+                # Get cart items from POST data
+                cart_items = []
+                for key, value in request.POST.items():
+                    if key.startswith("quantity_"):
+                        item_id = key.replace("quantity_", "")
+                        quantity = int(value)
+                        if quantity > 0:
+                            menu_item = get_object_or_404(MenuItem, id=item_id)
+                            cart_items.append({"item": menu_item, "quantity": quantity})
+
+                if not cart_items:
+                    order.delete()
+                    messages.error(request, "Giỏ hàng trống!")
+                    return redirect("menu")
+
+                # Create order items
+                for cart_item in cart_items:
+                    OrderItem.objects.create(
+                        order=order,
+                        menu_item=cart_item["item"],
+                        quantity=cart_item["quantity"],
+                    )
+
+                # Calculate total and points
+                order.calculate_total()
+
+                # Add points to customer profile
+                if profile:
+                    profile.add_points(order.points_earned)
+
+                # Update profile address if empty
+                if profile and not profile.address:
+                    profile.address = delivery_address
+                    profile.phone = phone
+                    profile.save()
+
+                # Payment method message
+                payment_msg = {
+                    "bank": "Vui lòng chuyển khoản theo thông tin đã cung cấp.",
+                    "momo": "Vui lòng thanh toán qua MoMo theo thông tin đã cung cấp.",
+                    "cod": "Bạn sẽ thanh toán khi nhận hàng.",
+                }
+
+                messages.success(
+                    request,
+                    f"Đặt hàng thành công! Đơn hàng #{order.id}. "
+                    f"{payment_msg.get(payment_method, '')} "
+                    f"Bạn nhận được {order.points_earned} điểm thưởng!",
+                )
+                return redirect("order_history")
+
+        except Exception as e:
+            messages.error(request, f"Lỗi khi đặt hàng: {str(e)}")
+            return redirect("checkout")
+
+    # GET request
+    context = {
+        "profile": profile,
+    }
+    return render(request, "checkout.html", context)

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
-{% block title %}My Profile - Restaurant{% endblock %}
+{% block title %}Hồ Sơ Của Tôi - Bò Nhúng Giấm Ngày Xưa{% endblock %}
 
 {% block content %}
 <style>
@@ -11,7 +12,7 @@
     
     .page-header h1 {
         font-size: 2.5rem;
-        color: #2c3e50;
+        color: var(--text-color);
         margin-bottom: 0.5rem;
     }
     
@@ -21,25 +22,26 @@
     }
     
     .profile-card {
-        background: white;
+        background: var(--card-bg);
         border-radius: 10px;
         padding: 2rem;
         margin-bottom: 2rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 6px var(--shadow);
+        border: 1px solid var(--border-color);
     }
     
     .profile-card h2 {
-        color: #667eea;
+        color: var(--primary-color);
         margin-bottom: 1.5rem;
         padding-bottom: 0.5rem;
-        border-bottom: 2px solid #e9ecef;
+        border-bottom: 2px solid var(--primary-color);
     }
     
     .info-row {
         display: flex;
         justify-content: space-between;
         padding: 1rem 0;
-        border-bottom: 1px solid #e9ecef;
+        border-bottom: 1px solid var(--border-color);
     }
     
     .info-row:last-child {
@@ -48,20 +50,23 @@
     
     .info-label {
         font-weight: 600;
-        color: #495057;
+        color: var(--text-color);
+        opacity: 0.9;
     }
     
     .info-value {
-        color: #6c757d;
+        color: var(--text-color);
+        opacity: 0.8;
     }
     
     .vip-banner {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        background: linear-gradient(135deg, #E5B960 0%, #D4A843 100%);
         color: white;
         padding: 2rem;
         border-radius: 10px;
         text-align: center;
         margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(212, 168, 67, 0.3);
     }
     
     .vip-banner h2 {
@@ -70,55 +75,113 @@
         color: white;
         padding: 0;
     }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--text-color);
+    }
+    
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: var(--transition);
+        background: var(--card-bg);
+        color: var(--text-color);
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(212, 168, 67, 0.1);
+    }
+    
+    .btn-secondary {
+        background: var(--card-bg);
+        color: var(--primary-color);
+        border: 2px solid var(--primary-color);
+    }
+    
+    .btn-secondary:hover {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .points-value {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+    
+    @media (max-width: 768px) {
+        .info-row {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
 </style>
 
 <div class="page-header">
-    <h1>👤 My Profile</h1>
-    <p>Manage your account information</p>
+    <h1>👤 Hồ Sơ Của Tôi</h1>
+    <p>Quản lý thông tin tài khoản của bạn</p>
 </div>
 
 <div class="profile-container">
     {% if profile.is_vip %}
     <div class="vip-banner">
-        <h2>⭐ VIP Member</h2>
-        <p>You're enjoying 10% off on all orders!</p>
-        <p style="font-size: 0.9rem; opacity: 0.9;">Member since {{ profile.vip_since|date:"F Y" }}</p>
+        <h2>⭐ Thành Viên VIP</h2>
+        <p>Bạn đang được giảm giá 10% cho tất cả đơn hàng!</p>
+        <p style="font-size: 0.9rem; opacity: 0.9;">Thành viên từ {{ profile.vip_since|date:"m/Y" }}</p>
     </div>
     {% endif %}
     
     <div class="profile-card">
-        <h2>Account Information</h2>
+        <h2>Thông Tin Tài Khoản</h2>
         <div class="info-row">
-            <span class="info-label">Username:</span>
+            <span class="info-label">Tên Đăng Nhập:</span>
             <span class="info-value">{{ user.username }}</span>
         </div>
         <div class="info-row">
-            <span class="info-label">Email:</span>
-            <span class="info-value">{{ user.email|default:"Not provided" }}</span>
+            <span class="info-label">Họ Tên:</span>
+            <span class="info-value">{{ user.get_full_name|default:"Chưa cập nhật" }}</span>
         </div>
         <div class="info-row">
-            <span class="info-label">Member Since:</span>
-            <span class="info-value">{{ user.date_joined|date:"F d, Y" }}</span>
+            <span class="info-label">Email:</span>
+            <span class="info-value">{{ user.email|default:"Chưa cung cấp" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Thành Viên Từ:</span>
+            <span class="info-value">{{ user.date_joined|date:"d/m/Y" }}</span>
         </div>
     </div>
     
     <div class="profile-card">
-        <h2>Rewards Summary</h2>
+        <h2>Tổng Kết Điểm Thưởng</h2>
         <div class="info-row">
-            <span class="info-label">Current Points:</span>
-            <span class="info-value" style="font-size: 1.3rem; font-weight: bold; color: #667eea;">{{ profile.points }}</span>
+            <span class="info-label">Điểm Hiện Tại:</span>
+            <span class="info-value points-value">{{ profile.points }}</span>
         </div>
         <div class="info-row">
-            <span class="info-label">Total Orders:</span>
+            <span class="info-label">Tổng Đơn Hàng:</span>
             <span class="info-value">{{ user.orders.count }}</span>
         </div>
         <div class="info-row">
-            <span class="info-label">VIP Status:</span>
+            <span class="info-label">Trạng Thái VIP:</span>
             <span class="info-value">
                 {% if profile.is_vip %}
-                    ✓ Active
+                    ✓ Đang Hoạt Động
                 {% else %}
-                    {{ 500|add:"-"|add:profile.points }} more points to VIP
+                    Còn {{ 500|add:"-"|add:profile.points }} điểm để đạt VIP
                 {% endif %}
             </span>
         </div>
@@ -126,23 +189,23 @@
     
     <form method="post" class="profile-card">
         {% csrf_token %}
-        <h2>Contact Information</h2>
+        <h2>Thông Tin Liên Hệ</h2>
         
         <div class="form-group">
-            <label for="phone">Phone Number</label>
-            <input type="tel" id="phone" name="phone" value="{{ profile.phone }}" placeholder="Enter your phone number">
+            <label for="phone">Số Điện Thoại</label>
+            <input type="tel" id="phone" name="phone" value="{{ profile.phone }}" placeholder="Nhập số điện thoại của bạn">
         </div>
         
         <div class="form-group">
-            <label for="address">Delivery Address</label>
-            <textarea id="address" name="address" rows="3" placeholder="Enter your delivery address">{{ profile.address }}</textarea>
+            <label for="address">Địa Chỉ Giao Hàng</label>
+            <textarea id="address" name="address" rows="3" placeholder="Nhập địa chỉ giao hàng của bạn">{{ profile.address }}</textarea>
         </div>
         
-        <button type="submit" class="btn">Update Profile</button>
+        <button type="submit" class="btn">Cập Nhật Hồ Sơ</button>
     </form>
     
     <div style="text-align: center; margin-top: 2rem;">
-        <a href="{% url 'order_history' %}" class="btn btn-secondary">View Order History</a>
+        <a href="{% url 'order_history' %}" class="btn btn-secondary">Xem Lịch Sử Đặt Hàng</a>
     </div>
 </div>
 {% endblock %}
