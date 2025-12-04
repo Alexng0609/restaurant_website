@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}News & Updates - Restaurant{% endblock %}
+{% block title %}Tin Tức - Bò Nhúng Giấm Ngày Xưa{% endblock %}
 
 {% block content %}
 <style>
@@ -11,80 +12,195 @@
     
     .page-header h1 {
         font-size: 2.5rem;
-        color: #2c3e50;
+        color: var(--text-color);
         margin-bottom: 0.5rem;
     }
     
-    .feed-list {
-        max-width: 800px;
+    .news-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
         margin: 0 auto;
     }
     
-    .feed-item {
-        background: white;
+    .news-card {
+        background: var(--card-bg);
         border-radius: 10px;
-        padding: 2rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        transition: transform 0.3s;
+        overflow: hidden;
+        box-shadow: 0 4px 6px var(--shadow);
+        transition: var(--transition);
+        border: 1px solid var(--border-color);
+        text-decoration: none;
+        display: block;
+        cursor: pointer;
     }
     
-    .feed-item:hover {
+    .news-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+        box-shadow: 0 8px 20px var(--shadow);
     }
     
-    .feed-item img {
+    .news-media {
         width: 100%;
-        border-radius: 8px;
-        margin-bottom: 1rem;
+        height: 250px;
+        position: relative;
+        background: var(--border-color);
+        overflow: hidden;
     }
     
-    .feed-item h2 {
-        color: #667eea;
-        margin-bottom: 1rem;
+    .news-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
     }
     
-    .feed-item .content {
-        line-height: 1.8;
-        color: #495057;
-        margin-bottom: 1rem;
+    .news-card:hover .news-media img {
+        transform: scale(1.05);
     }
     
-    .feed-item .date {
-        color: #6c757d;
+    .news-media video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        pointer-events: none;
+    }
+    
+    .video-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
         font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 5px;
     }
     
-    .no-feeds {
+    .read-more-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+        color: white;
+        padding: 1rem;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-weight: bold;
+    }
+    
+    .news-card:hover .read-more-overlay {
+        transform: translateY(0);
+    }
+    
+    .news-content {
+        padding: 1.5rem;
+    }
+    
+    .news-date {
+        color: var(--primary-color);
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .news-title {
+        font-size: 1.5rem;
+        color: var(--text-color);
+        margin-bottom: 1rem;
+        transition: color 0.3s ease;
+    }
+    
+    .news-card:hover .news-title {
+        color: var(--primary-color);
+    }
+    
+    .news-text {
+        color: var(--text-color);
+        opacity: 0.8;
+        line-height: 1.6;
+    }
+    
+    .no-news {
         text-align: center;
-        padding: 3rem;
-        color: #6c757d;
+        padding: 4rem 2rem;
+        color: var(--text-color);
+        opacity: 0.7;
+    }
+    
+    @media (max-width: 768px) {
+        .news-grid {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 
 <div class="page-header">
-    <h1>📰 News & Updates</h1>
-    <p>Stay updated with our latest announcements and promotions</p>
+    <h1>📰 Tin Tức & Khuyến Mãi</h1>
+    <p>Cập nhật tin tức mới nhất từ nhà hàng</p>
 </div>
 
-<div class="feed-list">
+<div class="news-grid">
     {% if news_feeds %}
-        {% for feed in news_feeds %}
-        <div class="feed-item">
-            {% if feed.image %}
-            <img src="{{ feed.image.url }}" alt="{{ feed.title }}">
+        {% for news in news_feeds %}
+        <a href="{% url 'feed_detail' news.id %}" class="news-card">
+            {% if news.video %}
+                <!-- Video Display -->
+                <div class="news-media">
+                    <video preload="metadata">
+                        <source src="{{ news.video.url }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <div class="video-badge">
+                        🎬 Video
+                    </div>
+                    <div class="read-more-overlay">
+                        <i class="fas fa-play-circle"></i>
+                        Xem Video
+                    </div>
+                </div>
+            {% elif news.image %}
+                <!-- Image Display -->
+                <div class="news-media">
+                    <img src="{{ news.image.url }}" alt="{{ news.title }}">
+                    <div class="read-more-overlay">
+                        <i class="fas fa-arrow-right"></i>
+                        Đọc Thêm
+                    </div>
+                </div>
+            {% else %}
+                <!-- No Media -->
+                <div class="news-media" style="display: flex; align-items: center; justify-content: center;">
+                    <span style="font-size: 4rem; opacity: 0.3;">📰</span>
+                    <div class="read-more-overlay">
+                        <i class="fas fa-arrow-right"></i>
+                        Đọc Thêm
+                    </div>
+                </div>
             {% endif %}
-            <h2>{{ feed.title }}</h2>
-            <div class="content">{{ feed.content|linebreaks }}</div>
-            <div class="date">Posted on {{ feed.created_at|date:"F d, Y" }}</div>
-        </div>
+            
+            <div class="news-content">
+                <div class="news-date">
+                    📅 {{ news.created_at|date:"d/m/Y" }}
+                </div>
+                <h2 class="news-title">{{ news.title }}</h2>
+                <p class="news-text">{{ news.content|truncatewords:30 }}</p>
+            </div>
+        </a>
         {% endfor %}
     {% else %}
-    <div class="no-feeds">
-        <h2>No news available at the moment</h2>
-        <p>Check back soon for updates!</p>
-    </div>
+        <div class="no-news">
+            <h2>Chưa có tin tức</h2>
+            <p>Hãy quay lại sau để xem tin tức mới nhất!</p>
+        </div>
     {% endif %}
 </div>
 {% endblock %}

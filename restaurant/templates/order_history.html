@@ -45,22 +45,8 @@
         font-size: 0.95rem;
     }
     
-    .stat-card.vip {
-        background: linear-gradient(135deg, #E5B960 0%, #D4A843 100%);
-        color: white;
-        box-shadow: 0 4px 15px rgba(212, 168, 67, 0.3);
-    }
-    
-    .stat-card.vip .value {
-        color: white;
-    }
-    
-    .stat-card.vip .label {
-        color: white;
-        opacity: 1;
-    }
-    
-    .rewards-section {
+    /* Point Redemption Section */
+    .redemption-section {
         background: var(--card-bg);
         border-radius: 10px;
         padding: 2rem;
@@ -69,46 +55,99 @@
         border: 1px solid var(--border-color);
     }
     
-    .rewards-section h2 {
+    .redemption-section h2 {
         color: var(--text-color);
-        margin-bottom: 1.5rem;
-    }
-    
-    .rewards-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-    }
-    
-    .reward-card {
-        background: linear-gradient(135deg, #D4A843 0%, #B8860B 100%);
-        color: white;
-        padding: 1.5rem;
-        border-radius: 10px;
-        text-align: center;
-        box-shadow: 0 4px 12px rgba(212, 168, 67, 0.3);
-    }
-    
-    .reward-card h3 {
-        margin-bottom: 0.5rem;
-        font-size: 1.5rem;
-    }
-    
-    .reward-card .points {
-        font-size: 1.2rem;
-        opacity: 0.9;
         margin-bottom: 1rem;
     }
     
-    .reward-card .btn {
-        background: white;
-        color: var(--primary-color);
+    .redemption-intro {
+        background: linear-gradient(135deg, #E5B960 0%, #D4A843 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        text-align: center;
     }
     
-    .reward-card.locked {
-        background: var(--border-color);
+    .redemption-intro h3 {
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .redemption-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .redemption-card {
+        background: var(--card-bg);
+        border: 2px solid var(--border-color);
+        border-radius: 10px;
+        padding: 1.5rem;
+        transition: var(--transition);
+        position: relative;
+    }
+    
+    .redemption-card:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 12px rgba(212, 168, 67, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    .redemption-card h3 {
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+        font-size: 1.3rem;
+    }
+    
+    .redemption-card .points-required {
+        font-size: 1.5rem;
+        font-weight: bold;
         color: var(--text-color);
-        opacity: 0.7;
+        margin: 0.5rem 0;
+    }
+    
+    .redemption-card .discount-text {
+        color: var(--text-color);
+        opacity: 0.8;
+        margin-bottom: 1rem;
+        line-height: 1.6;
+    }
+    
+    .redemption-card .btn {
+        width: 100%;
+    }
+    
+    .redemption-card.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .redemption-card.disabled .btn {
+        background: var(--border-color);
+        cursor: not-allowed;
+        color: var(--text-color);
+    }
+    
+    .redemption-card.disabled:hover {
+        transform: none;
+    }
+    
+    .redemption-badge {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        background: #ff4444;
+        color: white;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9rem;
     }
     
     .orders-section {
@@ -198,6 +237,26 @@
         color: var(--text-color);
         opacity: 0.8;
     }
+    
+    .info-section {
+        background: var(--card-bg);
+        border-radius: 10px;
+        padding: 2rem;
+        margin-bottom: 3rem;
+        box-shadow: 0 4px 6px var(--shadow);
+        border: 1px solid var(--border-color);
+    }
+    
+    .info-section h2 {
+        color: var(--text-color);
+        margin-bottom: 1rem;
+    }
+    
+    .info-section p {
+        color: var(--text-color);
+        opacity: 0.8;
+        line-height: 1.8;
+    }
 </style>
 
 <div class="page-header">
@@ -207,51 +266,127 @@
 
 <div class="profile-stats">
     <div class="stat-card">
-        <div class="value">{{ profile.points }}</div>
+        <div class="value">{{ profile.points|vnd_format }}</div>
         <div class="label">Điểm Thưởng</div>
     </div>
     <div class="stat-card">
         <div class="value">{{ orders.count }}</div>
         <div class="label">Tổng Đơn Hàng</div>
     </div>
-    {% if profile.is_vip %}
-    <div class="stat-card vip">
-        <div class="value">⭐ VIP</div>
-        <div class="label">Thành Viên Từ {{ profile.vip_since|date:"m/Y" }}</div>
+    <div class="stat-card">
+        <div class="value">{{ profile.created_at|date:"m/Y" }}</div>
+        <div class="label">Thành Viên Từ</div>
     </div>
-    {% endif %}
 </div>
 
-<div class="rewards-section">
-    <h2>🎁 Phần Thưởng Có Sẵn</h2>
-    {% if available_rewards %}
-    <div class="rewards-grid">
-        {% for reward in available_rewards %}
-        <div class="reward-card">
-            <h3>{{ reward.name }}</h3>
-            <p class="points">{{ reward.points_required }} Điểm Cần Thiết</p>
-            <p>Bạn có {{ profile.points }} điểm</p>
-        </div>
-        {% endfor %}
+<!-- Point Redemption Section -->
+<div class="redemption-section">
+    <h2>💎 Đổi Điểm Thưởng</h2>
+    
+    <div class="redemption-intro">
+        <h3>Bạn có {{ profile.points|vnd_format }} điểm!</h3>
+        <p>Đổi điểm để nhận ưu đãi hấp dẫn</p>
     </div>
-    <p style="margin-top: 1.5rem; color: var(--text-color); opacity: 0.8;">
-        <strong>Các Cấp Phần Thưởng:</strong><br>
-        🍰 100 điểm → Món tráng miệng miễn phí<br>
-        🍝 250 điểm → Món chính miễn phí<br>
-        🎉 500 điểm → Trạng thái VIP (Giảm 10% tất cả đơn hàng)
+    
+    <div class="redemption-options">
+        <!-- 5% Discount - 50 points -->
+        <div class="redemption-card {% if profile.points < 50000 %}disabled{% endif %}">
+            <div class="redemption-badge">HOT</div>
+            <h3>💰 Giảm Giá 5%</h3>
+            <div class="points-required">50.000 điểm</div>
+            <div class="discount-text">
+                • Áp dụng cho đơn hàng tiếp theo<br>
+                • Tiết kiệm đến 25.000 ₫<br>
+                • Sử dụng một lần
+            </div>
+            <form method="post" action="{% url 'redeem_discount' %}">
+                {% csrf_token %}
+                <input type="hidden" name="discount_type" value="5percent">
+                <button type="submit" class="btn" {% if profile.points < 50000 %}disabled{% endif %}>
+                    {% if profile.points < 50000 %}
+                        Cần thêm {{ 50000|add:profile.points|add:"-"|vnd_format }} điểm
+                    {% else %}
+                        Đổi Ngay
+                    {% endif %}
+                </button>
+            </form>
+        </div>
+        
+        <!-- 10% Discount - 100000 points -->
+        <div class="redemption-card {% if profile.points < 100000 %}disabled{% endif %}">
+            <div class="redemption-badge">HOT</div>
+            <h3>💰 Giảm Giá 10%</h3>
+            <div class="points-required">100.000 điểm</div>
+            <div class="discount-text">
+                • Áp dụng cho đơn hàng tiếp theo<br>
+                • Tiết kiệm đến 50.000 ₫<br>
+                • Sử dụng một lần
+            </div>
+            <form method="post" action="{% url 'redeem_discount' %}">
+                {% csrf_token %}
+                <input type="hidden" name="discount_type" value="10percent">
+                <button type="submit" class="btn" {% if profile.points < 100000 %}disabled{% endif %}>
+                    {% if profile.points < 100000 %}
+                        Cần thêm {{ 100000|add:profile.points|add:"-"|vnd_format }} điểm
+                    {% else %}
+                        Đổi Ngay
+                    {% endif %}
+                </button>
+            </form>
+        </div>
+        
+        <!-- Free Item - 20000 points -->
+        <div class="redemption-card {% if profile.points < 20000 %}disabled{% endif %}">
+            <div class="redemption-badge">🎁</div>
+            <h3>🍲 Phần Đậm Ấm Miễn Phí</h3>
+            <div class="points-required">200.000 điểm</div>
+            <div class="discount-text">
+                • Trị giá 149.000 ₫<br>
+                • Tự động thêm vào đơn tiếp theo<br>
+                • Món ngon đặc biệt
+            </div>
+            <form method="post" action="{% url 'redeem_reward' %}">
+                {% csrf_token %}
+                <input type="hidden" name="reward_type" value="phan_dam_am">
+                <button type="submit" class="btn" {% if profile.points < 20000 %}disabled{% endif %}>
+                    {% if profile.points < 200000 %}
+                        Cần thêm {{ 200000|add:profile.points|add:"-"|vnd_format }} điểm
+                    {% else %}
+                        Đổi Ngay
+                    {% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="info-section">
+    <h2>🎁 Cách Tích Điểm & Đổi Thưởng</h2>
+    <p>
+        <strong>📌 Cách nhận điểm:</strong><br>
+        • Mỗi đơn hàng nhận 10% giá trị thành điểm (1 ₫ = 1 điểm)<br>
+        • Ví dụ: Đơn hàng 350.000 ₫ = 35.000 điểm<br><br>
+        
+        <strong>💎 Các mức đổi điểm:</strong><br>
+        • 50.000 điểm → Giảm giá 5% cho đơn hàng tiếp theo<br>
+        • 100.000 điểm → Giảm giá 10% cho đơn hàng tiếp theo<br>
+        • 20.000 điểm → Phần Đậm Ấm miễn phí (trị giá 149.000 ₫)<br><br>
+        
+        <strong>⚡ Lưu ý:</strong><br>
+        • Điểm không có thời hạn sử dụng<br>
+        • Giảm giá chỉ áp dụng cho một đơn hàng<br>
+        • Món miễn phí tự động thêm vào đơn hàng tiếp theo<br>
+        • Có thể đổi nhiều lần khi đủ điểm
     </p>
-    {% else %}
-    <p style="color: var(--text-color); opacity: 0.8;">Tiếp tục đặt hàng để nhận điểm và mở khóa phần thưởng! Bạn hiện có {{ profile.points }} điểm.</p>
-    {% endif %}
 </div>
 
 {% if redemptions %}
-<div class="rewards-section">
+<div class="info-section">
     <h2>🎯 Lịch Sử Đổi Thưởng</h2>
     {% for redemption in redemptions %}
     <div class="order-item">
-        <strong>{{ redemption.reward.name }}</strong> - {{ redemption.points_spent }} điểm - 
-        <span style="color: var(--text-color); opacity: 0.7;">{{ redemption.redeemed_at|date:"d/m/Y" }}</span>
+        <strong>{{ redemption.reward.name }}</strong> - {{ redemption.points_spent|vnd_format }} điểm - 
+        <span style="color: var(--text-color); opacity: 0.7;">{{ redemption.redeemed_at|date:"d/m/Y H:i" }}</span>
     </div>
     {% endfor %}
 </div>
@@ -284,11 +419,11 @@
                 <div>
                     <div class="order-date">{{ order.created_at|date:"d/m/Y - H:i" }}</div>
                     <div style="color: #28a745; margin-top: 0.3rem;">
-                        ⭐ +{{ order.points_earned }} điểm đã nhận
+                        ⭐ +{{ order.points_earned|vnd_format }} điểm đã nhận
                     </div>
                     {% if order.discount_applied > 0 %}
                     <div style="color: var(--primary-color); margin-top: 0.3rem;">
-                        💰 Giảm Giá VIP: -{{ order.discount_applied|vnd_format }} ₫
+                        💰 Giảm Giá: -{{ order.discount_applied|vnd_format }} ₫
                     </div>
                     {% endif %}
                 </div>

@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
 from decimal import Decimal
+from django.core.validators import FileExtensionValidator
 
 
 class Category(models.Model):
@@ -43,11 +44,23 @@ class MenuItem(models.Model):
 
 
 class NewsFeed(models.Model):
-    """Restaurant news, announcements, and promotions"""
+    """Restaurant news, announcements, and promotions with video support"""
 
     title = models.CharField(max_length=200)
     content = models.TextField()
     image = models.ImageField(upload_to="news/", blank=True, null=True)
+
+    # NEW VIDEO FIELD
+    video = models.FileField(
+        upload_to="news/videos/",
+        blank=True,
+        null=True,
+        validators=[
+            FileExtensionValidator(allowed_extensions=["mp4", "mov", "avi", "webm"])
+        ],
+        help_text="Upload video (MP4, MOV, AVI, or WebM format)",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
@@ -59,6 +72,10 @@ class NewsFeed(models.Model):
 
     def __str__(self):
         return self.title
+
+    def has_media(self):
+        """Check if news has either image or video"""
+        return bool(self.image or self.video)
 
 
 class CustomerProfile(models.Model):
@@ -77,7 +94,7 @@ class CustomerProfile(models.Model):
     def add_points(self, amount):
         """Add points and check for VIP status"""
         self.points += amount
-        if self.points >= 500 and not self.is_vip:
+        if self.points >= 500000 and not self.is_vip:
             from django.utils import timezone
 
             self.is_vip = True
@@ -95,12 +112,12 @@ class CustomerProfile(models.Model):
     def get_available_rewards(self):
         """Get list of rewards the customer can redeem"""
         rewards = []
-        if self.points >= 100:
-            rewards.append({"name": "Free Dessert 🍰", "points": 100, "tier": 1})
-        if self.points >= 250:
-            rewards.append({"name": "Free Main Dish 🍝", "points": 250, "tier": 2})
-        if self.points >= 500:
-            rewards.append({"name": "VIP Status 🎉", "points": 500, "tier": 3})
+        if self.points >= 100000:
+            rewards.append({"name": "Free Dessert 🍰", "points": 100.000, "tier": 1})
+        if self.points >= 250000:
+            rewards.append({"name": "Free Main Dish 🍝", "points": 250.000, "tier": 2})
+        if self.points >= 500000:
+            rewards.append({"name": "VIP Status 🎉", "points": 500.000, "tier": 3})
         return rewards
 
 

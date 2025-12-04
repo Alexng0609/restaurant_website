@@ -30,16 +30,6 @@
         margin-bottom: 0.5rem;
     }
     
-    .vip-badge {
-        background: gold;
-        color: #333;
-        padding: 8px 15px;
-        border-radius: 20px;
-        font-weight: bold;
-        display: inline-block;
-        margin-top: 0.5rem;
-    }
-    
     .order-form {
         max-width: 900px;
         margin: 0 auto;
@@ -110,6 +100,11 @@
         text-align: center;
         background: var(--card-bg);
         color: var(--text-color);
+    }
+    
+    .item-quantity input:focus {
+        outline: none;
+        border-color: var(--primary-color);
     }
     
     .item-subtotal {
@@ -196,11 +191,9 @@
 
 {% if profile %}
 <div class="rewards-banner">
-    <h3>Điểm Thưởng Của Bạn: {{ profile.points }} Điểm</h3>
+    <h3>Điểm Thưởng Của Bạn: {{ profile.points|vnd_format }} Điểm</h3>
     <p>Bạn sẽ nhận 10% điểm từ đơn hàng này!</p>
-    {% if profile.is_vip %}
-    <span class="vip-badge">⭐ VIP - Giảm Giá 10%!</span>
-    {% endif %}
+    <p style="font-size: 0.9rem; margin-top: 0.5rem;">Đổi điểm thưởng tại trang Lịch Sử Đặt Hàng</p>
 </div>
 {% endif %}
 
@@ -234,7 +227,7 @@
                            max="20" 
                            value="0" 
                            class="quantity-input"
-                           onchange="updateTotal()">
+                           data-item-id="{{ item.id }}">
                 </div>
                 <div class="item-subtotal" id="subtotal_{{ item.id }}">0 ₫</div>
             </div>
@@ -258,12 +251,6 @@
             <span>Tạm Tính:</span>
             <span id="subtotal">0 ₫</span>
         </div>
-        {% if profile.is_vip %}
-        <div class="summary-row" style="color: #28a745;">
-            <span>Giảm Giá VIP (10%):</span>
-            <span id="discount">-0 ₫</span>
-        </div>
-        {% endif %}
         <div class="summary-row">
             <span>Điểm Nhận Được:</span>
             <span id="points">0 pts</span>
@@ -310,13 +297,8 @@ function updateTotal() {
     // Format subtotal
     document.getElementById('subtotal').textContent = `${formatVND(subtotal)} ₫`;
     
-    {% if profile.is_vip %}
-    const discount = subtotal * 0.10;
-    document.getElementById('discount').textContent = `-${formatVND(discount)} ₫`;
-    const total = subtotal - discount;
-    {% else %}
+    // No VIP discount on order page - just show subtotal as total
     const total = subtotal;
-    {% endif %}
     
     // Format total
     document.getElementById('total').textContent = `${formatVND(total)} ₫`;
@@ -324,6 +306,50 @@ function updateTotal() {
     const points = Math.floor(subtotal * 0.10);
     document.getElementById('points').textContent = `${points} pts`;
 }
+
+// Add event listeners to all quantity inputs
+document.addEventListener('DOMContentLoaded', function() {
+    // Attach change event to all quantity inputs
+    const quantityInputs = document.querySelectorAll('.quantity-input');
+    quantityInputs.forEach(input => {
+        input.addEventListener('input', updateTotal);
+        input.addEventListener('change', updateTotal);
+    });
+    
+    // Initialize total
+    updateTotal();
+    
+    // Load cart from menu page if available
+    const menuCart = sessionStorage.getItem('menuCart');
+    if (menuCart) {
+        try {
+            const cartItems = JSON.parse(menuCart);
+            const itemCounts = cartItems.reduce((acc, item) => {
+                acc[item.id] = (acc[item.id] || 0) + 1;
+                return acc;
+            }, {});
+            
+            // Set quantities
+            Object.entries(itemCounts).forEach(([id, count]) => {
+                const input = document.querySelector(`input[name="quantity_${id}"]`);
+                if (input) {
+                    input.value = count;
+                }
+            });
+            
+            // Clear sessionStorage
+            sessionStorage.removeItem('menuCart');
+            
+            // Update totals
+            updateTotal();
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        } catch (e) {
+            console.error('Error loading cart:', e);
+        }
+    }
+});
 
 // Form submission - redirect to checkout
 document.getElementById('orderForm').addEventListener('submit', function(e) {
@@ -363,42 +389,6 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
     
     // Redirect to checkout
     window.location.href = '{% url "checkout" %}';
-});
-
-// Initialize on page load
-updateTotal();
-
-// Load cart from menu page if available
-document.addEventListener('DOMContentLoaded', function() {
-    const menuCart = sessionStorage.getItem('menuCart');
-    if (menuCart) {
-        try {
-            const cartItems = JSON.parse(menuCart);
-            const itemCounts = cartItems.reduce((acc, item) => {
-                acc[item.id] = (acc[item.id] || 0) + 1;
-                return acc;
-            }, {});
-            
-            // Set quantities
-            Object.entries(itemCounts).forEach(([id, count]) => {
-                const input = document.querySelector(`input[name="quantity_${id}"]`);
-                if (input) {
-                    input.value = count;
-                }
-            });
-            
-            // Clear sessionStorage
-            sessionStorage.removeItem('menuCart');
-            
-            // Update totals
-            updateTotal();
-            
-            // Scroll to top
-            window.scrollTo(0, 0);
-        } catch (e) {
-            console.error('Error loading cart:', e);
-        }
-    }
 });
 </script>
 {% endblock %}

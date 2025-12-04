@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib import messages
 from django.db import transaction
+from django.utils import timezone
 from .models import (
     MenuItem,
     Category,
@@ -36,6 +37,20 @@ def feeds(request):
         "news_feeds": news_feeds,
     }
     return render(request, "feeds.html", context)
+
+
+def feed_detail(request, news_id):
+    """Single news feed detail view"""
+    news = get_object_or_404(NewsFeed, id=news_id, is_active=True)
+
+    # Get related news (exclude current, get 3 most recent)
+    related_news = NewsFeed.objects.filter(is_active=True).exclude(id=news_id)[:3]
+
+    context = {
+        "news": news,
+        "related_news": related_news,
+    }
+    return render(request, "feed_detail.html", context)
 
 
 def menu(request):
@@ -81,7 +96,7 @@ def place_order(request):
                             cart_items.append({"item": menu_item, "quantity": quantity})
 
                 if not cart_items:
-                    messages.error(request, "Please add items to your cart.")
+                    messages.error(request, "Vui lòng thêm món vào giỏ hàng.")
                     return redirect("menu")
 
                 # Create order items
@@ -101,20 +116,20 @@ def place_order(request):
 
                 messages.success(
                     request,
-                    f"Order placed successfully! You earned {order.points_earned} points. "
-                    f"Total: ${order.total_amount}",
+                    f"Đặt hàng thành công! Bạn nhận được {order.points_earned:,.0f} điểm. "
+                    f"Tổng: {order.total_amount:,.0f} ₫",
                 )
                 return redirect("order_history")
 
         except Exception as e:
-            messages.error(request, f"Error placing order: {str(e)}")
+            messages.error(request, f"Lỗi khi đặt hàng: {str(e)}")
             return redirect("menu")
 
     # GET request - show order form
     categories = Category.objects.prefetch_related("items").all()
     menu_items = MenuItem.objects.filter(is_available=True)
 
-    # Get customer profile for VIP status
+    # Get customer profile
     profile = None
     if hasattr(request.user, "profile"):
         profile = request.user.profile
@@ -125,130 +140,6 @@ def place_order(request):
         "profile": profile,
     }
     return render(request, "order.html", context)
-
-
-@login_required
-def order_history(request):
-    """View order history and rewards"""
-    orders = Order.objects.filter(customer=request.user).prefetch_related(
-        "items__menu_item"
-    )
-    profile = get_object_or_404(CustomerProfile, user=request.user)
-    available_rewards = profile.get_available_rewards()
-    redemptions = RewardRedemption.objects.filter(customer=request.user)
-
-    context = {
-        "orders": orders,
-        "profile": profile,
-        "available_rewards": available_rewards,
-        "redemptions": redemptions,
-    }
-    return render(request, "order_history.html", context)
-
-
-@login_required
-def redeem_reward(request, reward_id):
-    """Redeem a reward"""
-    if request.method == "POST":
-        reward = get_object_or_404(Reward, id=reward_id, is_active=True)
-        profile = request.user.profile
-
-        if profile.points >= reward.points_required:
-            with transaction.atomic():
-                profile.redeem_points(reward.points_required)
-                RewardRedemption.objects.create(
-                    customer=request.user,
-                    reward=reward,
-                    points_spent=reward.points_required,
-                )
-                messages.success(request, f"Successfully redeemed: {reward.name}!")
-        else:
-            messages.error(request, "Not enough points to redeem this reward.")
-
-    return redirect("order_history")
-
-
-def signup_view(request):
-    """User registration view"""
-    if request.user.is_authenticated:
-        return redirect("index")
-
-    if request.method == "POST":
-        from .forms import CustomSignUpForm
-
-        form = CustomSignUpForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            username = form.cleaned_data.get("username")
-            messages.success(
-                request,
-                f"Tài khoản đã được tạo cho {username}! Bạn có thể đăng nhập ngay.",
-            )
-            login(request, user)
-            return redirect("index")
-        else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, f"{field}: {error}")
-    else:
-        from .forms import CustomSignUpForm
-
-        form = CustomSignUpForm()
-
-    return render(request, "signup.html", {"form": form})
-
-
-def login_view(request):
-    """User login view"""
-    if request.user.is_authenticated:
-        return redirect("index")
-
-    if request.method == "POST":
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get("username")
-            password = form.cleaned_data.get("password")
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                login(request, user)
-                messages.success(request, f"Welcome back, {username}!")
-                next_url = request.GET.get("next", "index")
-                return redirect(next_url)
-        else:
-            messages.error(request, "Invalid username or password.")
-    else:
-        form = AuthenticationForm()
-
-    return render(request, "login.html", {"form": form})
-
-
-@login_required
-def logout_view(request):
-    """User logout view"""
-    logout(request)
-    messages.success(request, "You have been logged out successfully.")
-    return redirect("index")
-
-
-@login_required
-def profile_view(request):
-    """User profile view"""
-    profile = get_object_or_404(CustomerProfile, user=request.user)
-
-    if request.method == "POST":
-        profile.phone = request.POST.get("phone", "")
-        profile.address = request.POST.get("address", "")
-        profile.save()
-        messages.success(request, "Profile updated successfully!")
-        return redirect("profile")
-
-    context = {
-        "profile": profile,
-    }
-    return render(request, "profile.html", context)
-
-
-# Add these new views to your views.py file
 
 
 @login_required
@@ -309,14 +200,11 @@ def checkout(request):
                         quantity=cart_item["quantity"],
                     )
 
-                # Calculate total and points
                 # Apply discount if available
                 discount_info = request.session.get("pending_discount")
                 if discount_info:
                     order.calculate_total(apply_discount=discount_info)
                     del request.session["pending_discount"]
-                elif profile and profile.is_vip:
-                    order.calculate_total(apply_discount={"type": "vip"})
                 else:
                     order.calculate_total()
 
@@ -341,7 +229,7 @@ def checkout(request):
                     request,
                     f"Đặt hàng thành công! Đơn hàng #{order.id}. "
                     f"{payment_msg.get(payment_method, '')} "
-                    f"Bạn nhận được {order.points_earned} điểm thưởng!",
+                    f"Bạn nhận được {order.points_earned:,.0f} điểm thưởng!",
                 )
                 return redirect("order_history")
 
@@ -356,93 +244,171 @@ def checkout(request):
     return render(request, "checkout.html", context)
 
 
-# Add these views to your restaurant/views.py file
+@login_required
+def order_history(request):
+    """View order history and rewards"""
+    profile = request.user.profile
+    orders = Order.objects.filter(customer=request.user)
 
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.shortcuts import redirect
-from decimal import Decimal
+    # Get reward redemptions
+    redemptions = RewardRedemption.objects.filter(customer=request.user)
+
+    context = {
+        "profile": profile,
+        "orders": orders,
+        "redemptions": redemptions,
+    }
+    return render(request, "order_history.html", context)
 
 
 @login_required
 def redeem_discount(request):
-    """Redeem 5% discount for 100 points"""
+    """Redeem discount - 5% (50k points) or 10% (100k points)"""
     if request.method == "POST":
         profile = request.user.profile
+        discount_type = request.POST.get("discount_type")
 
-        if profile.points >= 100:
+        if discount_type == "5percent":
+            required_points = 50000
+            discount_value = 0.05
+            label = "Giảm giá 5%"
+        elif discount_type == "10percent":
+            required_points = 100000
+            discount_value = 0.10
+            label = "Giảm giá 10%"
+        else:
+            messages.error(request, "❌ Loại giảm giá không hợp lệ.")
+            return redirect("order_history")
+
+        if profile.points >= required_points:
             # Deduct points
-            profile.points -= 100
+            profile.points -= required_points
             profile.save()
 
             # Store discount in session for next order
             request.session["pending_discount"] = {
-                "type": "5percent",
-                "value": 0.05,
-                "label": "Giảm giá 5%",
+                "type": discount_type,
+                "value": discount_value,
+                "label": label,
             }
 
             messages.success(
                 request,
-                "🎉 Đã đổi thành công! Giảm giá 5% sẽ được áp dụng cho đơn hàng tiếp theo của bạn.",
+                f"🎉 Đã đổi thành công! {label} sẽ được áp dụng cho đơn hàng tiếp theo.",
             )
         else:
-            messages.error(request, "❌ Bạn không đủ điểm để đổi ưu đãi này.")
-
-    return redirect("order_history")
-
-
-@login_required
-def redeem_vip(request):
-    """Redeem VIP status for 500 points"""
-    if request.method == "POST":
-        profile = request.user.profile
-
-        if profile.is_vip:
-            messages.info(request, "ℹ️ Bạn đã là thành viên VIP rồi!")
-        elif profile.points >= 500:
-            # Deduct points and activate VIP
-            profile.points -= 500
-            profile.is_vip = True
-            profile.vip_since = timezone.now()
-            profile.save()
-
-            messages.success(
-                request,
-                "🌟 Chúc mừng! Bạn đã trở thành thành viên VIP. Nhận giảm giá 10% cho mọi đơn hàng!",
-            )
-        else:
+            needed = required_points - profile.points
             messages.error(
-                request,
-                f"❌ Bạn cần thêm {500 - profile.points} điểm nữa để trở thành VIP.",
+                request, f"❌ Bạn cần thêm {needed:,.0f} điểm nữa để đổi ưu đãi này."
             )
 
     return redirect("order_history")
 
 
 @login_required
-def redeem_reward(request):
-    """Redeem free dessert for 150 points"""
+def redeem_reward(request, reward_id=None):
+    """Redeem free item - Phần Đậm Ấm (20k points)"""
     if request.method == "POST":
         profile = request.user.profile
         reward_type = request.POST.get("reward_type")
 
-        if reward_type == "dessert" and profile.points >= 150:
-            # Deduct points
-            profile.points -= 150
-            profile.save()
+        if reward_type == "phan_dam_am":
+            required_points = 200000
+            reward_name = "Phần Đậm Ấm"
+            reward_value = 149000
 
-            # Store reward in session
-            request.session["pending_reward"] = {
-                "type": "dessert",
-                "label": "Món tráng miệng miễn phí",
-            }
+            if profile.points >= required_points:
+                # Deduct points
+                profile.points -= required_points
+                profile.save()
 
-            messages.success(
-                request,
-                "🍰 Đã đổi thành công! Món tráng miệng miễn phí sẽ được thêm vào đơn hàng tiếp theo.",
-            )
+                # Store reward in session
+                request.session["pending_reward"] = {
+                    "type": "phan_dam_am",
+                    "name": reward_name,
+                    "value": reward_value,
+                }
+
+                messages.success(
+                    request,
+                    f"🍲 Đã đổi thành công! {reward_name} (trị giá {reward_value:,.0f} ₫) "
+                    f"sẽ được tự động thêm vào đơn hàng tiếp theo.",
+                )
+            else:
+                needed = required_points - profile.points
+                messages.error(
+                    request,
+                    f"❌ Bạn cần thêm {needed:,.0f} điểm nữa để đổi phần thưởng này.",
+                )
         else:
-            messages.error(request, "❌ Bạn không đủ điểm để đổi phần thưởng này.")
+            messages.error(request, "❌ Loại phần thưởng không hợp lệ.")
 
     return redirect("order_history")
+
+
+def signup_view(request):
+    """User registration - matches urls.py name"""
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Create customer profile
+            CustomerProfile.objects.create(user=user)
+            username = form.cleaned_data.get("username")
+            messages.success(request, f"Tài khoản đã được tạo cho {username}!")
+            login(request, user)
+            return redirect("index")
+    else:
+        form = UserCreationForm()
+
+    return render(request, "register.html", {"form": form})
+
+
+def login_view(request):
+    """User login - matches urls.py name"""
+    if request.method == "POST":
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get("username")
+            password = form.cleaned_data.get("password")
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                messages.success(request, f"Chào mừng trở lại, {username}!")
+                return redirect("index")
+            else:
+                messages.error(request, "Tên đăng nhập hoặc mật khẩu không đúng.")
+        else:
+            messages.error(request, "Tên đăng nhập hoặc mật khẩu không đúng.")
+    else:
+        form = AuthenticationForm()
+
+    return render(request, "login.html", {"form": form})
+
+
+@login_required
+def logout_view(request):
+    """User logout - matches urls.py name"""
+    logout(request)
+    messages.success(request, "Bạn đã đăng xuất.")
+    return redirect("index")
+
+
+@login_required
+def profile_view(request):
+    """User profile view - matches urls.py name"""
+    profile = request.user.profile
+
+    if request.method == "POST":
+        # Update profile
+        profile.phone = request.POST.get("phone", "")
+        profile.address = request.POST.get("address", "")
+        profile.save()
+
+        messages.success(request, "Hồ sơ đã được cập nhật!")
+        return redirect("profile")
+
+    context = {
+        "profile": profile,
+    }
+    return render(request, "profile.html", context)

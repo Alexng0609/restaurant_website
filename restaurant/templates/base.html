@@ -413,7 +413,7 @@
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'place_order' %}">Đặt Món</a></li>
                     <li><a href="{% url 'order_history' %}">Lịch Sử</a></li>
-                    <li><a href="{% url 'profile' %}">Hồ Sơ ({{ user.profile.points }} điểm)</a></li>
+                    <li><a href="{% url 'profile' %}">Hồ Sơ </a></li>
                     <li><a href="{% url 'logout' %}">Đăng Xuất</a></li>
                 {% else %}
                     <li><a href="{% url 'login' %}">Đăng Nhập</a></li>
