@@ -13,4 +13,7 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("profile/", views.profile_view, name="profile"),
     path("checkout/", views.checkout, name="checkout"),
+    path("redeem/discount/", views.redeem_discount, name="redeem_discount"),
+    path("redeem/vip/", views.redeem_vip, name="redeem_vip"),
+    path("redeem/reward/", views.redeem_reward, name="redeem_reward"),
 ]

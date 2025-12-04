@@ -149,19 +149,22 @@ class Order(models.Model):
     def __str__(self):
         return f"Order #{self.id} - {self.customer.username} - {self.status}"
 
-    def calculate_total(self):
-        """Calculate order total from order items"""
+    def calculate_total(self, apply_discount=None):
+        # Calculater order total from order items
         subtotal = sum(item.subtotal for item in self.items.all())
 
-        # Apply VIP discount if applicable
+        # Apply discount from session (manual redemption)
         discount = 0
-        if hasattr(self.customer, "profile") and self.customer.profile.is_vip:
-            discount = subtotal * Decimal("0.10")  # 10% VIP discount
+        if apply_discount:
+            if apply_discount.get("type") == "5percent":
+                discount = subtotal * Decimal("0.05")
+            elif apply_discount.get("type") == "vip" or self.customer.profile.is_vip:
+                discount = subtotal * Decimal("0.10")
             self.discount_applied = discount
 
         self.total_amount = subtotal - discount
 
-        # Calculate points (10% of item price)
+        # Calculate points (10% of subtotal before discount)
         self.points_earned = int((subtotal * Decimal("0.10")).to_integral_value())
 
         self.save()

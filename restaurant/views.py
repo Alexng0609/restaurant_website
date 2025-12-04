@@ -310,7 +310,15 @@ def checkout(request):
                     )
 
                 # Calculate total and points
-                order.calculate_total()
+                # Apply discount if available
+                discount_info = request.session.get("pending_discount")
+                if discount_info:
+                    order.calculate_total(apply_discount=discount_info)
+                    del request.session["pending_discount"]
+                elif profile and profile.is_vip:
+                    order.calculate_total(apply_discount={"type": "vip"})
+                else:
+                    order.calculate_total()
 
                 # Add points to customer profile
                 if profile:
@@ -346,3 +354,95 @@ def checkout(request):
         "profile": profile,
     }
     return render(request, "checkout.html", context)
+
+
+# Add these views to your restaurant/views.py file
+
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.shortcuts import redirect
+from decimal import Decimal
+
+
+@login_required
+def redeem_discount(request):
+    """Redeem 5% discount for 100 points"""
+    if request.method == "POST":
+        profile = request.user.profile
+
+        if profile.points >= 100:
+            # Deduct points
+            profile.points -= 100
+            profile.save()
+
+            # Store discount in session for next order
+            request.session["pending_discount"] = {
+                "type": "5percent",
+                "value": 0.05,
+                "label": "Giảm giá 5%",
+            }
+
+            messages.success(
+                request,
+                "🎉 Đã đổi thành công! Giảm giá 5% sẽ được áp dụng cho đơn hàng tiếp theo của bạn.",
+            )
+        else:
+            messages.error(request, "❌ Bạn không đủ điểm để đổi ưu đãi này.")
+
+    return redirect("order_history")
+
+
+@login_required
+def redeem_vip(request):
+    """Redeem VIP status for 500 points"""
+    if request.method == "POST":
+        profile = request.user.profile
+
+        if profile.is_vip:
+            messages.info(request, "ℹ️ Bạn đã là thành viên VIP rồi!")
+        elif profile.points >= 500:
+            # Deduct points and activate VIP
+            profile.points -= 500
+            profile.is_vip = True
+            profile.vip_since = timezone.now()
+            profile.save()
+
+            messages.success(
+                request,
+                "🌟 Chúc mừng! Bạn đã trở thành thành viên VIP. Nhận giảm giá 10% cho mọi đơn hàng!",
+            )
+        else:
+            messages.error(
+                request,
+                f"❌ Bạn cần thêm {500 - profile.points} điểm nữa để trở thành VIP.",
+            )
+
+    return redirect("order_history")
+
+
+@login_required
+def redeem_reward(request):
+    """Redeem free dessert for 150 points"""
+    if request.method == "POST":
+        profile = request.user.profile
+        reward_type = request.POST.get("reward_type")
+
+        if reward_type == "dessert" and profile.points >= 150:
+            # Deduct points
+            profile.points -= 150
+            profile.save()
+
+            # Store reward in session
+            request.session["pending_reward"] = {
+                "type": "dessert",
+                "label": "Món tráng miệng miễn phí",
+            }
+
+            messages.success(
+                request,
+                "🍰 Đã đổi thành công! Món tráng miệng miễn phí sẽ được thêm vào đơn hàng tiếp theo.",
+            )
+        else:
+            messages.error(request, "❌ Bạn không đủ điểm để đổi phần thưởng này.")
+
+    return redirect("order_history")
