@@ -1,0 +1,522 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Báo Cáo Doanh Thu - Admin{% endblock %}
+
+{% block content %}
+<style>
+    .admin-header {
+        background: var(--nav-bg);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .admin-header h1 {
+        font-size: 2.5rem;
+        margin: 0;
+    }
+    
+    .back-to-admin {
+        background: white;
+        color: var(--primary-color);
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+    
+    .back-to-admin:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    
+    .filter-section {
+        background: var(--card-bg);
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .filter-form {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: end;
+    }
+    
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .filter-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--text-color);
+    }
+    
+    .filter-group select,
+    .filter-group input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: var(--text-color);
+    }
+    
+    .tab-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .tab-button {
+        padding: 0.75rem 1.5rem;
+        border: 2px solid var(--primary-color);
+        background: transparent;
+        color: var(--primary-color);
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+    
+    .tab-button.active {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .summary-card {
+        background: var(--card-bg);
+        padding: 1.5rem;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px var(--shadow);
+    }
+    
+    .summary-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .summary-label {
+        color: var(--text-color);
+        opacity: 0.8;
+        font-size: 0.9rem;
+    }
+    
+    .summary-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+    
+    .chart-section {
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .chart-section h2 {
+        color: var(--text-color);
+        margin-bottom: 1.5rem;
+    }
+    
+    .chart-container {
+        min-height: 300px;
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .data-table th {
+        background: var(--primary-color);
+        color: white;
+        font-weight: 600;
+    }
+    
+    .data-table tr:hover {
+        background: var(--border-color);
+    }
+    
+    .data-table td {
+        color: var(--text-color);
+    }
+    
+    .number-cell {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+    
+    .export-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .export-btn {
+        padding: 0.75rem 1.5rem;
+        background: var(--cta-bg);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .admin-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .filter-form {
+            flex-direction: column;
+        }
+        
+        .tab-buttons {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+
+<div class="admin-header">
+    <div>
+        <h1>📊 Báo Cáo Doanh Thu</h1>
+        <p>Phân tích doanh số theo ngày, tháng, năm</p>
+    </div>
+    <a href="/admin/" class="back-to-admin">
+        <i class="fas fa-arrow-left"></i> Quay Lại Admin
+    </a>
+</div>
+
+<!-- Tab Buttons -->
+<div class="tab-buttons">
+    <a href="?type=daily" class="tab-button {% if report_type == 'daily' %}active{% endif %}">
+        📅 Theo Ngày
+    </a>
+    <a href="?type=monthly" class="tab-button {% if report_type == 'monthly' %}active{% endif %}">
+        📆 Theo Tháng
+    </a>
+    <a href="?type=annual" class="tab-button {% if report_type == 'annual' %}active{% endif %}">
+        📈 Theo Năm
+    </a>
+</div>
+
+<!-- Filter Section -->
+<div class="filter-section">
+    <form method="GET" class="filter-form">
+        <input type="hidden" name="type" value="{{ report_type }}">
+        
+        <div class="filter-group">
+            <label for="start_date">Từ Ngày</label>
+            <input type="date" name="start_date" id="start_date" value="{{ start_date|date:'Y-m-d' }}">
+        </div>
+        
+        <div class="filter-group">
+            <label for="end_date">Đến Ngày</label>
+            <input type="date" name="end_date" id="end_date" value="{{ end_date|date:'Y-m-d' }}">
+        </div>
+        
+        <div class="filter-group">
+            <button type="submit" class="btn">
+                <i class="fas fa-filter"></i> Lọc
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Export Buttons -->
+<div class="export-buttons">
+    <button onclick="window.print()" class="export-btn">
+        <i class="fas fa-print"></i> In Báo Cáo
+    </button>
+    <button onclick="exportToCSV()" class="export-btn">
+        <i class="fas fa-file-csv"></i> Xuất CSV
+    </button>
+</div>
+
+<!-- Summary Cards -->
+<div class="summary-grid">
+    <div class="summary-card">
+        <div class="summary-icon">🛒</div>
+        <div class="summary-label">Tổng Đơn Hàng</div>
+        <div class="summary-value">{{ summary.total_orders|intcomma }}</div>
+    </div>
+    
+    <div class="summary-card">
+        <div class="summary-icon">💰</div>
+        <div class="summary-label">Tổng Doanh Thu</div>
+        <div class="summary-value">{{ summary.total_sales|floatformat:0|intcomma }} ₫</div>
+    </div>
+    
+    <div class="summary-card">
+        <div class="summary-icon">🎁</div>
+        <div class="summary-label">Tổng Giảm Giá</div>
+        <div class="summary-value">{{ summary.total_discount|floatformat:0|intcomma }} ₫</div>
+    </div>
+    
+    <div class="summary-card">
+        <div class="summary-icon">📈</div>
+        <div class="summary-label">Doanh Thu Gốc</div>
+        <div class="summary-value">{{ summary.sales_before_discount|floatformat:0|intcomma }} ₫</div>
+    </div>
+</div>
+
+<!-- Sales Chart -->
+<div class="chart-section">
+    <h2>📈 Biểu Đồ Doanh Thu</h2>
+    <div class="chart-container">
+        <canvas id="salesChart"></canvas>
+    </div>
+</div>
+
+<!-- Sales Data Table -->
+<div class="chart-section">
+    <h2>📋 Chi Tiết Doanh Thu</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Thời Gian</th>
+                <th class="number-cell">Số Đơn</th>
+                <th class="number-cell">Doanh Thu</th>
+                <th class="number-cell">Giảm Giá</th>
+                <th class="number-cell">Doanh Thu Gốc</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in sales_data %}
+            <tr>
+                <td>{{ data.period }}</td>
+                <td class="number-cell">{{ data.orders|intcomma }}</td>
+                <td class="number-cell">{{ data.sales|floatformat:0|intcomma }} ₫</td>
+                <td class="number-cell">{{ data.discount|floatformat:0|intcomma }} ₫</td>
+                <td class="number-cell">{{ data.sales_before_discount|floatformat:0|intcomma }} ₫</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 2rem; opacity: 0.7;">
+                    Không có dữ liệu trong khoảng thời gian này
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Discount Breakdown -->
+<div class="chart-section">
+    <h2>🎁 Phân Tích Giảm Giá</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Loại Giảm Giá</th>
+                <th class="number-cell">Số Lần Sử Dụng</th>
+                <th class="number-cell">Tổng Tiền Giảm</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Giảm 5%</td>
+                <td class="number-cell">{{ discount_breakdown.5_percent_count|intcomma }}</td>
+                <td class="number-cell">{{ discount_breakdown.5_percent_amount|floatformat:0|intcomma }} ₫</td>
+            </tr>
+            <tr>
+                <td>Giảm 10% (VIP)</td>
+                <td class="number-cell">{{ discount_breakdown.10_percent_count|intcomma }}</td>
+                <td class="number-cell">{{ discount_breakdown.10_percent_amount|floatformat:0|intcomma }} ₫</td>
+            </tr>
+            <tr style="font-weight: bold; background: var(--border-color);">
+                <td>Tổng</td>
+                <td class="number-cell">{{ discount_breakdown.5_percent_count|add:discount_breakdown.10_percent_count|intcomma }}</td>
+                <td class="number-cell">{{ summary.total_discount|floatformat:0|intcomma }} ₫</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Payment Methods -->
+<div class="chart-section">
+    <h2>💳 Phương Thức Thanh Toán</h2>
+    <div class="chart-container" style="max-height: 300px;">
+        <canvas id="paymentChart"></canvas>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<script>
+    const chartData = {
+        salesData: {{ chart_data.sales_data|safe }},
+        paymentMethods: {{ chart_data.payment_methods|safe }}
+    };
+    
+    Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--text-color');
+    
+    // Sales Chart
+    const salesCtx = document.getElementById('salesChart');
+    if (salesCtx && chartData.salesData.length > 0) {
+        new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: chartData.salesData.map(d => d.period),
+                datasets: [
+                    {
+                        label: 'Doanh Thu (₫)',
+                        data: chartData.salesData.map(d => d.sales),
+                        borderColor: '#D4A843',
+                        backgroundColor: 'rgba(212, 168, 67, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Giảm Giá (₫)',
+                        data: chartData.salesData.map(d => d.discount),
+                        borderColor: '#FF6B6B',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN') + ' ₫';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + 
+                                    context.parsed.y.toLocaleString('vi-VN') + ' ₫';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Payment Methods Chart
+    const paymentCtx = document.getElementById('paymentChart');
+    if (paymentCtx && chartData.paymentMethods.length > 0) {
+        const paymentLabels = {
+            'bank': 'Chuyển Khoản',
+            'momo': 'MoMo',
+            'cod': 'COD'
+        };
+        
+        new Chart(paymentCtx, {
+            type: 'doughnut',
+            data: {
+                labels: chartData.paymentMethods.map(p => paymentLabels[p.payment_method] || p.payment_method),
+                datasets: [{
+                    data: chartData.paymentMethods.map(p => p.revenue),
+                    backgroundColor: ['#D4A843', '#B8860B', '#C19A3B']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + 
+                                    context.parsed.toLocaleString('vi-VN') + ' ₫';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function exportToCSV() {
+        // Use UTF-8 BOM for proper Vietnamese character encoding
+        let csv = '\uFEFF';
+        csv += 'Báo Cáo Doanh Thu - Bò Nhúng Giấm Ngày Xưa\n';
+        csv += 'Từ ngày: {{ start_date|date:"d/m/Y" }}, Đến ngày: {{ end_date|date:"d/m/Y" }}\n';
+        csv += 'Loại báo cáo: {% if report_type == "daily" %}Theo Ngày{% elif report_type == "monthly" %}Theo Tháng{% else %}Theo Năm{% endif %}\n\n';
+        
+        csv += 'TỔNG QUAN\n';
+        csv += 'Tổng đơn hàng,{{ summary.total_orders }}\n';
+        csv += 'Tổng doanh thu,{{ summary.total_sales|floatformat:0 }}\n';
+        csv += 'Tổng giảm giá,{{ summary.total_discount|floatformat:0 }}\n';
+        csv += 'Doanh thu gốc,{{ summary.sales_before_discount|floatformat:0 }}\n\n';
+        
+        csv += 'CHI TIẾT DOANH THU\n';
+        csv += 'Thời Gian,Số Đơn,Doanh Thu,Giảm Giá,Doanh Thu Gốc\n';
+        
+        {% for data in sales_data %}
+        csv += '"{{ data.period }}",{{ data.orders }},{{ data.sales|floatformat:0 }},{{ data.discount|floatformat:0 }},{{ data.sales_before_discount|floatformat:0 }}\n';
+        {% endfor %}
+        
+        csv += '\nPHÂN TÍCH GIẢM GIÁ\n';
+        csv += 'Loại,Số Lần,Tổng Tiền\n';
+        csv += 'Giảm 5%,{{ discount_breakdown.5_percent_count }},{{ discount_breakdown.5_percent_amount|floatformat:0 }}\n';
+        csv += 'Giảm 10% (VIP),{{ discount_breakdown.10_percent_count }},{{ discount_breakdown.10_percent_amount|floatformat:0 }}\n';
+        
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'bao-cao-doanh-thu-' + new Date().toISOString().split('T')[0] + '.csv';
+        link.click();
+    }
+    
+    // Animate on load
+    window.addEventListener('DOMContentLoaded', function() {
+        gsap.from('.summary-card', {
+            y: 30,
+            opacity: 0,
+            duration: 0.6,
+            stagger: 0.1
+        });
+    });
+</script>
+{% endblock %}

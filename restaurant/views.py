@@ -16,6 +16,13 @@ from .models import (
     RewardRedemption,
 )
 from decimal import Decimal
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Sum, Count, Q, Avg, F
+from django.db.models.functions import TruncDate, TruncMonth, TruncYear
+from datetime import datetime, timedelta
+from django.db import models
+import json
+from django.contrib.auth.models import User
 
 
 def index(request):
@@ -412,3 +419,433 @@ def profile_view(request):
         "profile": profile,
     }
     return render(request, "profile.html", context)
+
+
+@staff_member_required
+def admin_reports(request):
+    """Admin reports view - daily, monthly, and annual reports"""
+
+    # Get filter parameters
+    report_type = request.GET.get("type", "daily")
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+
+    # Set default date ranges
+    today = timezone.now().date()
+    if not start_date:
+        if report_type == "daily":
+            start_date = today
+        elif report_type == "monthly":
+            start_date = today.replace(day=1)
+        else:  # annual
+            start_date = today.replace(month=1, day=1)
+    else:
+        start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+
+    if not end_date:
+        end_date = today
+    else:
+        end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+    # Base queryset - orders within date range
+    orders = Order.objects.filter(
+        created_at__date__gte=start_date, created_at__date__lte=end_date
+    ).exclude(status="cancelled")
+
+    # Calculate summary statistics
+    summary = {
+        "total_orders": orders.count(),
+        "total_revenue": orders.aggregate(Sum("total_amount"))["total_amount__sum"]
+        or 0,
+        "total_discount": orders.aggregate(Sum("discount_applied"))[
+            "discount_applied__sum"
+        ]
+        or 0,
+        "total_points_earned": orders.aggregate(Sum("points_earned"))[
+            "points_earned__sum"
+        ]
+        or 0,
+        "average_order_value": orders.aggregate(Avg("total_amount"))[
+            "total_amount__avg"
+        ]
+        or 0,
+    }
+
+    # Orders with discount applied
+    discounted_orders = orders.filter(discount_applied__gt=0)
+    summary["discounted_orders_count"] = discounted_orders.count()
+    summary["discount_usage_rate"] = (
+        (summary["discounted_orders_count"] / summary["total_orders"] * 100)
+        if summary["total_orders"] > 0
+        else 0
+    )
+
+    # Top selling items
+    top_items = (
+        OrderItem.objects.filter(order__in=orders)
+        .values("menu_item__name", "menu_item__category__name")
+        .annotate(quantity_sold=Sum("quantity"), revenue=Sum("subtotal"))
+        .order_by("-quantity_sold")[:10]
+    )
+
+    # Sales by category
+    category_sales = (
+        OrderItem.objects.filter(order__in=orders)
+        .values("menu_item__category__name")
+        .annotate(total_quantity=Sum("quantity"), total_revenue=Sum("subtotal"))
+        .order_by("-total_revenue")
+    )
+
+    # Payment method breakdown
+    payment_methods = (
+        orders.values("payment_method")
+        .annotate(count=Count("id"), revenue=Sum("total_amount"))
+        .order_by("-count")
+    )
+
+    # Order status breakdown
+    status_breakdown = (
+        orders.values("status").annotate(count=Count("id")).order_by("-count")
+    )
+
+    # Time-based analysis
+    if report_type == "daily":
+        # Hourly breakdown for daily report
+        hourly_sales = (
+            orders.extra(select={"hour": "EXTRACT(hour FROM created_at)"})
+            .values("hour")
+            .annotate(orders_count=Count("id"), revenue=Sum("total_amount"))
+            .order_by("hour")
+        )
+
+        time_data = list(hourly_sales)
+
+    elif report_type == "monthly":
+        # Daily breakdown for monthly report
+        daily_sales = (
+            orders.annotate(date=TruncDate("created_at"))
+            .values("date")
+            .annotate(orders_count=Count("id"), revenue=Sum("total_amount"))
+            .order_by("date")
+        )
+
+        time_data = list(daily_sales)
+
+    else:  # annual
+        # Monthly breakdown for annual report
+        monthly_sales = (
+            orders.annotate(month=TruncMonth("created_at"))
+            .values("month")
+            .annotate(orders_count=Count("id"), revenue=Sum("total_amount"))
+            .order_by("month")
+        )
+
+        time_data = list(monthly_sales)
+
+    # Customer insights
+    top_customers = (
+        orders.values("customer__username", "customer__profile__points")
+        .annotate(order_count=Count("id"), total_spent=Sum("total_amount"))
+        .order_by("-total_spent")[:10]
+    )
+
+    # VIP customers who ordered
+    vip_orders = orders.filter(customer__profile__is_vip=True)
+    summary["vip_orders_count"] = vip_orders.count()
+    summary["vip_revenue"] = (
+        vip_orders.aggregate(Sum("total_amount"))["total_amount__sum"] or 0
+    )
+
+    # Discount breakdown
+    discount_breakdown = {
+        "5_percent": orders.filter(
+            discount_applied__gt=0,
+            discount_applied__lte=models.F("total_amount") * Decimal("0.06"),  # ~5%
+        ).count(),
+        "10_percent": orders.filter(
+            discount_applied__gt=models.F("total_amount") * Decimal("0.06")  # ~10%
+        ).count(),
+    }
+
+    # Convert querysets to JSON for charts
+    chart_data = {
+        "time_series": json.dumps(time_data, default=str),
+        "category_sales": json.dumps(list(category_sales), default=str),
+        "payment_methods": json.dumps(list(payment_methods), default=str),
+        "status_breakdown": json.dumps(list(status_breakdown), default=str),
+    }
+
+    context = {
+        "report_type": report_type,
+        "start_date": start_date,
+        "end_date": end_date,
+        "summary": summary,
+        "top_items": top_items,
+        "category_sales": category_sales,
+        "payment_methods": payment_methods,
+        "status_breakdown": status_breakdown,
+        "time_data": time_data,
+        "top_customers": top_customers,
+        "discount_breakdown": discount_breakdown,
+        "chart_data": chart_data,
+    }
+
+    return render(request, "admin_reports.html", context)
+
+
+@staff_member_required
+def user_reports(request):
+    """User Reports - Shows customer activity and spending"""
+
+    # Get filter parameters
+    search_query = request.GET.get("search", "")
+    order_by = request.GET.get("order_by", "-total_spent")
+
+    # Base queryset - all users with profiles
+    users = User.objects.filter(profile__isnull=False).select_related("profile")
+
+    if search_query:
+        users = users.filter(
+            Q(username__icontains=search_query)
+            | Q(email__icontains=search_query)
+            | Q(first_name__icontains=search_query)
+            | Q(last_name__icontains=search_query)
+        )
+
+    # Annotate user statistics
+    user_stats = []
+    for user in users:
+        orders = Order.objects.filter(customer=user).exclude(status="cancelled")
+
+        total_orders = orders.count()
+        total_spent = orders.aggregate(Sum("total_amount"))["total_amount__sum"] or 0
+        total_discount_used = (
+            orders.aggregate(Sum("discount_applied"))["discount_applied__sum"] or 0
+        )
+        orders_with_discount = orders.filter(discount_applied__gt=0).count()
+
+        # Calculate total without discount (what they would have paid)
+        total_before_discount = total_spent + total_discount_used
+
+        user_stats.append(
+            {
+                "user": user,
+                "username": user.username,
+                "email": user.email,
+                "total_orders": total_orders,
+                "total_spent": total_spent,
+                "total_discount_used": total_discount_used,
+                "total_before_discount": total_before_discount,
+                "orders_with_discount": orders_with_discount,
+                "discount_percentage": (
+                    total_discount_used / total_before_discount * 100
+                )
+                if total_before_discount > 0
+                else 0,
+                "current_points": user.profile.points,
+                "is_vip": user.profile.is_vip,
+                "average_order_value": total_spent / total_orders
+                if total_orders > 0
+                else 0,
+            }
+        )
+
+    # Sort user stats
+    reverse = order_by.startswith("-")
+    sort_key = order_by.lstrip("-")
+    user_stats.sort(key=lambda x: x.get(sort_key, 0), reverse=reverse)
+
+    # Calculate summary statistics
+    summary = {
+        "total_customers": len(user_stats),
+        "total_orders": sum(u["total_orders"] for u in user_stats),
+        "total_revenue": sum(u["total_spent"] for u in user_stats),
+        "total_discount_given": sum(u["total_discount_used"] for u in user_stats),
+        "vip_customers": sum(1 for u in user_stats if u["is_vip"]),
+        "customers_used_discount": sum(
+            1 for u in user_stats if u["orders_with_discount"] > 0
+        ),
+    }
+
+    context = {
+        "user_stats": user_stats,
+        "summary": summary,
+        "search_query": search_query,
+        "order_by": order_by,
+    }
+
+    return render(request, "user_reports.html", context)
+
+
+@staff_member_required
+def sales_reports(request):
+    """Sales Reports - Daily, Monthly, and Annual sales analysis"""
+
+    # Get filter parameters
+    report_type = request.GET.get("type", "daily")
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
+
+    # Set default date ranges
+    today = timezone.now().date()
+    if not start_date:
+        if report_type == "daily":
+            start_date = today
+        elif report_type == "monthly":
+            start_date = today.replace(day=1)
+        else:  # annual
+            start_date = today.replace(month=1, day=1)
+    else:
+        start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+
+    if not end_date:
+        end_date = today
+    else:
+        end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+    # Base queryset
+    orders = Order.objects.filter(
+        created_at__date__gte=start_date, created_at__date__lte=end_date
+    ).exclude(status="cancelled")
+
+    # Calculate summary
+    summary = {
+        "total_orders": orders.count(),
+        "total_sales": orders.aggregate(Sum("total_amount"))["total_amount__sum"] or 0,
+        "total_discount": orders.aggregate(Sum("discount_applied"))[
+            "discount_applied__sum"
+        ]
+        or 0,
+        "sales_before_discount": 0,
+    }
+    summary["sales_before_discount"] = (
+        summary["total_sales"] + summary["total_discount"]
+    )
+
+    # Time-based breakdown
+    if report_type == "daily":
+        # Hourly breakdown
+        sales_data = []
+        for hour in range(24):
+            hour_orders = orders.filter(created_at__hour=hour)
+            hour_total = (
+                hour_orders.aggregate(Sum("total_amount"))["total_amount__sum"] or 0
+            )
+            hour_discount = (
+                hour_orders.aggregate(Sum("discount_applied"))["discount_applied__sum"]
+                or 0
+            )
+
+            sales_data.append(
+                {
+                    "period": f"{hour}:00",
+                    "orders": hour_orders.count(),
+                    "sales": hour_total,
+                    "discount": hour_discount,
+                    "sales_before_discount": hour_total + hour_discount,
+                }
+            )
+
+    elif report_type == "monthly":
+        # Daily breakdown
+        current_date = start_date
+        sales_data = []
+
+        while current_date <= end_date:
+            day_orders = orders.filter(created_at__date=current_date)
+            day_total = (
+                day_orders.aggregate(Sum("total_amount"))["total_amount__sum"] or 0
+            )
+            day_discount = (
+                day_orders.aggregate(Sum("discount_applied"))["discount_applied__sum"]
+                or 0
+            )
+
+            sales_data.append(
+                {
+                    "period": current_date.strftime("%d/%m/%Y"),
+                    "date": current_date,
+                    "orders": day_orders.count(),
+                    "sales": day_total,
+                    "discount": day_discount,
+                    "sales_before_discount": day_total + day_discount,
+                }
+            )
+            current_date += timedelta(days=1)
+
+    else:  # annual
+        # Monthly breakdown
+        sales_data = (
+            orders.annotate(month=TruncMonth("created_at"))
+            .values("month")
+            .annotate(
+                orders=Count("id"),
+                sales=Sum("total_amount"),
+                discount=Sum("discount_applied"),
+            )
+            .order_by("month")
+        )
+
+        # Format the data
+        formatted_data = []
+        for item in sales_data:
+            formatted_data.append(
+                {
+                    "period": item["month"].strftime("%B %Y"),
+                    "date": item["month"],
+                    "orders": item["orders"],
+                    "sales": item["sales"] or 0,
+                    "discount": item["discount"] or 0,
+                    "sales_before_discount": (item["sales"] or 0)
+                    + (item["discount"] or 0),
+                }
+            )
+        sales_data = formatted_data
+
+    # Discount breakdown
+    discount_5_percent = orders.filter(
+        discount_applied__gt=0,
+        discount_applied__lte=F("total_amount") * 0.06,  # Approximately 5%
+    )
+    discount_10_percent = orders.filter(
+        discount_applied__gt=F("total_amount") * 0.06  # Approximately 10%
+    )
+
+    discount_breakdown = {
+        "5_percent_count": discount_5_percent.count(),
+        "5_percent_amount": discount_5_percent.aggregate(Sum("discount_applied"))[
+            "discount_applied__sum"
+        ]
+        or 0,
+        "10_percent_count": discount_10_percent.count(),
+        "10_percent_amount": discount_10_percent.aggregate(Sum("discount_applied"))[
+            "discount_applied__sum"
+        ]
+        or 0,
+    }
+
+    # Payment method breakdown
+    payment_methods = (
+        orders.values("payment_method")
+        .annotate(count=Count("id"), revenue=Sum("total_amount"))
+        .order_by("-count")
+    )
+
+    # Chart data
+    chart_data = {
+        "sales_data": json.dumps(list(sales_data), default=str),
+        "payment_methods": json.dumps(list(payment_methods), default=str),
+    }
+
+    context = {
+        "report_type": report_type,
+        "start_date": start_date,
+        "end_date": end_date,
+        "summary": summary,
+        "sales_data": sales_data,
+        "discount_breakdown": discount_breakdown,
+        "payment_methods": payment_methods,
+        "chart_data": chart_data,
+    }
+
+    return render(request, "sales_reports.html", context)

@@ -1,4 +1,7 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
+from django.http import HttpResponseRedirect
 from .models import (
     Category,
     MenuItem,
@@ -9,6 +12,7 @@ from .models import (
     Reward,
     RewardRedemption,
 )
+from .admin_models import UserReport, SalesReport
 
 
 @admin.register(Category)
@@ -85,3 +89,44 @@ class RewardRedemptionAdmin(admin.ModelAdmin):
     list_filter = ["redeemed_at"]
     search_fields = ["customer__username", "reward__name"]
     readonly_fields = ["redeemed_at"]
+
+
+# ============================================================================
+# REPORTS SECTION
+# ============================================================================
+
+
+@admin.register(UserReport)
+class UserReportAdmin(admin.ModelAdmin):
+    """Admin interface for User Reports - redirects to user reports view"""
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        # Redirect to the user reports page
+        return HttpResponseRedirect(reverse("user_reports"))
+
+
+@admin.register(SalesReport)
+class SalesReportAdmin(admin.ModelAdmin):
+    """Admin interface for Sales Reports - redirects to sales reports view"""
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        # Redirect to the sales reports page
+        return HttpResponseRedirect(reverse("sales_reports"))

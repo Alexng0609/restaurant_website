@@ -20,4 +20,7 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("profile/", views.profile_view, name="profile"),
     path("feeds/<int:news_id>/", views.feed_detail, name="feed_detail"),
+    path("admin-reports/", views.admin_reports, name="admin_reports"),
+    path("reports/users/", views.user_reports, name="user_reports"),
+    path("reports/sales/", views.sales_reports, name="sales_reports"),
 ]

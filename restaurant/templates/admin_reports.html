@@ -1,0 +1,698 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Báo Cáo Quản Trị - Bò Nhúng Giấm Ngày Xưa{% endblock %}
+
+{% block content %}
+<style>
+    .reports-header {
+        background: var(--nav-bg);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .reports-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .filter-section {
+        background: var(--card-bg);
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .filter-form {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: end;
+    }
+    
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .filter-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--text-color);
+    }
+    
+    .filter-group select,
+    .filter-group input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: var(--text-color);
+    }
+    
+    .tab-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .tab-button {
+        padding: 0.75rem 1.5rem;
+        border: 2px solid var(--primary-color);
+        background: transparent;
+        color: var(--primary-color);
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+    
+    .tab-button.active {
+        background: var(--primary-color);
+        color: white;
+    }
+    
+    .tab-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px var(--shadow);
+    }
+    
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+    
+    .summary-card {
+        background: var(--card-bg);
+        padding: 1.5rem;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px var(--shadow);
+        transition: var(--transition);
+    }
+    
+    .summary-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px var(--shadow);
+    }
+    
+    .summary-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .summary-label {
+        color: var(--text-color);
+        opacity: 0.8;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .summary-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+    
+    .chart-section {
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .chart-section h2 {
+        color: var(--text-color);
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+    }
+    
+    .chart-container {
+        min-height: 300px;
+        position: relative;
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .data-table th {
+        background: var(--primary-color);
+        color: white;
+        font-weight: 600;
+    }
+    
+    .data-table tr:hover {
+        background: var(--border-color);
+    }
+    
+    .data-table td {
+        color: var(--text-color);
+    }
+    
+    .export-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .export-btn {
+        padding: 0.75rem 1.5rem;
+        background: var(--cta-bg);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: var(--transition);
+    }
+    
+    .export-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px var(--shadow);
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-color);
+        opacity: 0.7;
+    }
+    
+    @media print {
+        .filter-section,
+        .tab-buttons,
+        .export-buttons,
+        nav,
+        footer {
+            display: none !important;
+        }
+        
+        body {
+            background: white;
+        }
+        
+        .summary-card,
+        .chart-section {
+            break-inside: avoid;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .filter-form {
+            flex-direction: column;
+        }
+        
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="reports-header">
+    <h1>📊 Báo Cáo Kinh Doanh</h1>
+    <p>Phân tích chi tiết doanh thu và hoạt động nhà hàng</p>
+</div>
+
+<!-- Filter Section -->
+<div class="filter-section">
+    <form method="GET" class="filter-form">
+        <div class="filter-group">
+            <label for="type">Loại Báo Cáo</label>
+            <select name="type" id="type" onchange="this.form.submit()">
+                <option value="daily" {% if report_type == 'daily' %}selected{% endif %}>Theo Ngày</option>
+                <option value="monthly" {% if report_type == 'monthly' %}selected{% endif %}>Theo Tháng</option>
+                <option value="annual" {% if report_type == 'annual' %}selected{% endif %}>Theo Năm</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="start_date">Từ Ngày</label>
+            <input type="date" name="start_date" id="start_date" value="{{ start_date|date:'Y-m-d' }}">
+        </div>
+        
+        <div class="filter-group">
+            <label for="end_date">Đến Ngày</label>
+            <input type="date" name="end_date" id="end_date" value="{{ end_date|date:'Y-m-d' }}">
+        </div>
+        
+        <div class="filter-group">
+            <button type="submit" class="btn">
+                <i class="fas fa-filter"></i> Lọc
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Export Buttons -->
+<div class="export-buttons">
+    <button onclick="window.print()" class="export-btn">
+        <i class="fas fa-print"></i> In Báo Cáo
+    </button>
+    <button onclick="exportToCSV()" class="export-btn">
+        <i class="fas fa-file-csv"></i> Xuất CSV
+    </button>
+</div>
+
+<!-- Summary Cards -->
+<div class="summary-grid">
+    <div class="summary-card">
+        <div class="summary-icon">🛒</div>
+        <div class="summary-label">Tổng Đơn Hàng</div>
+        <div class="summary-value">{{ summary.total_orders }}</div>
+    </div>
+    
+    <div class="summary-card">
+        <div class="summary-icon">💰</div>
+        <div class="summary-label">Tổng Doanh Thu</div>
+        <div class="summary-value">{{ summary.total_revenue|floatformat:0 }} ₫</div>
+    </div>
+    
+    <div class="summary-card">
+        <div class="summary-icon">🎁</div>
+        <div class="summary-label">Tổng Giảm Giá</div>
+        <div class="summary-value">{{ summary.total_discount|floatformat:0 }} ₫</div>
+    </div>
+    
+    <div class="summary-card">
+        <div class="summary-icon">📈</div>
+        <div class="summary-label">Giá Trị TB/Đơn</div>
+        <div class="summary-value">{{ summary.average_order_value|floatformat:0 }} ₫</div>
+    </div>
+    
+    <div class="summary-card">
+        <div class="summary-icon">⭐</div>
+        <div class="summary-label">Điểm Thưởng Tặng</div>
+        <div class="summary-value">{{ summary.total_points_earned|floatformat:0 }}</div>
+    </div>
+    
+    <div class="summary-card">
+        <div class="summary-icon">🏆</div>
+        <div class="summary-label">Đơn VIP</div>
+        <div class="summary-value">{{ summary.vip_orders_count }}</div>
+    </div>
+    
+    <div class="summary-card">
+        <div class="summary-icon">💳</div>
+        <div class="summary-label">Đơn Có Giảm Giá</div>
+        <div class="summary-value">{{ summary.discounted_orders_count }}</div>
+    </div>
+    
+    <div class="summary-card">
+        <div class="summary-icon">📊</div>
+        <div class="summary-label">Tỷ Lệ Dùng Giảm Giá</div>
+        <div class="summary-value">{{ summary.discount_usage_rate|floatformat:1 }}%</div>
+    </div>
+</div>
+
+<!-- Top Selling Items -->
+<div class="chart-section">
+    <h2>🍽️ Top 10 Món Bán Chạy</h2>
+    {% if top_items %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Hạng</th>
+                <th>Tên Món</th>
+                <th>Danh Mục</th>
+                <th>Số Lượng Bán</th>
+                <th>Doanh Thu</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in top_items %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.menu_item__name }}</td>
+                <td>{{ item.menu_item__category__name }}</td>
+                <td>{{ item.quantity_sold }}</td>
+                <td>{{ item.revenue|floatformat:0 }} ₫</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="no-data">Không có dữ liệu</div>
+    {% endif %}
+</div>
+
+<!-- Sales by Category -->
+<div class="chart-section">
+    <h2>📂 Doanh Thu Theo Danh Mục</h2>
+    {% if category_sales %}
+    <div class="chart-container">
+        <canvas id="categoryChart"></canvas>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Danh Mục</th>
+                <th>Số Lượng</th>
+                <th>Doanh Thu</th>
+                <th>% Doanh Thu</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cat in category_sales %}
+            <tr>
+                <td>{{ cat.menu_item__category__name }}</td>
+                <td>{{ cat.total_quantity }}</td>
+                <td>{{ cat.total_revenue|floatformat:0 }} ₫</td>
+                <td>{% widthratio cat.total_revenue summary.total_revenue 100 %}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="no-data">Không có dữ liệu</div>
+    {% endif %}
+</div>
+
+<!-- Payment Methods -->
+<div class="chart-section">
+    <h2>💳 Phương Thức Thanh Toán</h2>
+    {% if payment_methods %}
+    <div class="chart-container">
+        <canvas id="paymentChart"></canvas>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Phương Thức</th>
+                <th>Số Đơn</th>
+                <th>Doanh Thu</th>
+                <th>% Đơn Hàng</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pm in payment_methods %}
+            <tr>
+                <td>
+                    {% if pm.payment_method == 'bank' %}Chuyển Khoản
+                    {% elif pm.payment_method == 'momo' %}MoMo
+                    {% elif pm.payment_method == 'cod' %}COD
+                    {% else %}{{ pm.payment_method }}{% endif %}
+                </td>
+                <td>{{ pm.count }}</td>
+                <td>{{ pm.revenue|floatformat:0 }} ₫</td>
+                <td>{% widthratio pm.count summary.total_orders 100 %}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="no-data">Không có dữ liệu</div>
+    {% endif %}
+</div>
+
+<!-- Discount Breakdown -->
+<div class="chart-section">
+    <h2>🎁 Phân Tích Giảm Giá</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Loại Giảm Giá</th>
+                <th>Số Lần Sử Dụng</th>
+                <th>% Tổng Đơn</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Giảm 5%</td>
+                <td>{{ discount_breakdown.5_percent }}</td>
+                <td>{% if summary.total_orders > 0 %}{% widthratio discount_breakdown.5_percent summary.total_orders 100 %}%{% else %}0%{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Giảm 10% (VIP)</td>
+                <td>{{ discount_breakdown.10_percent }}</td>
+                <td>{% if summary.total_orders > 0 %}{% widthratio discount_breakdown.10_percent summary.total_orders 100 %}%{% else %}0%{% endif %}</td>
+            </tr>
+            <tr style="font-weight: bold; background: var(--border-color);">
+                <td>Tổng</td>
+                <td>{{ summary.discounted_orders_count }}</td>
+                <td>{{ summary.discount_usage_rate|floatformat:1 }}%</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Top Customers -->
+<div class="chart-section">
+    <h2>👥 Top 10 Khách Hàng</h2>
+    {% if top_customers %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Hạng</th>
+                <th>Tên Khách Hàng</th>
+                <th>Số Đơn</th>
+                <th>Tổng Chi Tiêu</th>
+                <th>Điểm Hiện Tại</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for customer in top_customers %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ customer.customer__username }}</td>
+                <td>{{ customer.order_count }}</td>
+                <td>{{ customer.total_spent|floatformat:0 }} ₫</td>
+                <td>{{ customer.customer__profile__points|default:0 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="no-data">Không có dữ liệu</div>
+    {% endif %}
+</div>
+
+<!-- Time Series Chart -->
+<div class="chart-section">
+    <h2>📈 Biểu Đồ Doanh Thu Theo Thời Gian</h2>
+    {% if time_data %}
+    <div class="chart-container">
+        <canvas id="timeSeriesChart"></canvas>
+    </div>
+    {% else %}
+    <div class="no-data">Không có dữ liệu</div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+<script>
+    // Parse chart data from Django
+    const chartData = {
+        timeSeries: {{ chart_data.time_series|safe }},
+        categorySales: {{ chart_data.category_sales|safe }},
+        paymentMethods: {{ chart_data.payment_methods|safe }},
+        statusBreakdown: {{ chart_data.status_breakdown|safe }}
+    };
+    
+    // Chart.js default config
+    Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--text-color');
+    
+    // Category Sales Chart
+    {% if category_sales %}
+    const categoryCtx = document.getElementById('categoryChart');
+    if (categoryCtx) {
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: chartData.categorySales.map(c => c.menu_item__category__name),
+                datasets: [{
+                    data: chartData.categorySales.map(c => c.total_revenue),
+                    backgroundColor: [
+                        '#D4A843', '#B8860B', '#C19A3B', '#E5C565', 
+                        '#8B6914', '#A0792F', '#FFD700'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + 
+                                    context.parsed.toLocaleString('vi-VN') + ' ₫';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+    
+    // Payment Methods Chart
+    {% if payment_methods %}
+    const paymentCtx = document.getElementById('paymentChart');
+    if (paymentCtx) {
+        const paymentLabels = {
+            'bank': 'Chuyển Khoản',
+            'momo': 'MoMo',
+            'cod': 'COD'
+        };
+        
+        new Chart(paymentCtx, {
+            type: 'bar',
+            data: {
+                labels: chartData.paymentMethods.map(p => paymentLabels[p.payment_method] || p.payment_method),
+                datasets: [{
+                    label: 'Số Đơn',
+                    data: chartData.paymentMethods.map(p => p.count),
+                    backgroundColor: '#D4A843'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+    
+    // Time Series Chart
+    {% if time_data %}
+    const timeCtx = document.getElementById('timeSeriesChart');
+    if (timeCtx) {
+        let timeLabels, timeValues;
+        
+        {% if report_type == 'daily' %}
+        timeLabels = chartData.timeSeries.map(d => d.hour + ':00');
+        timeValues = chartData.timeSeries.map(d => d.revenue);
+        {% elif report_type == 'monthly' %}
+        timeLabels = chartData.timeSeries.map(d => new Date(d.date).toLocaleDateString('vi-VN'));
+        timeValues = chartData.timeSeries.map(d => d.revenue);
+        {% else %}
+        timeLabels = chartData.timeSeries.map(d => new Date(d.month).toLocaleDateString('vi-VN', {month: 'long', year: 'numeric'}));
+        timeValues = chartData.timeSeries.map(d => d.revenue);
+        {% endif %}
+        
+        new Chart(timeCtx, {
+            type: 'line',
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    label: 'Doanh Thu (₫)',
+                    data: timeValues,
+                    borderColor: '#D4A843',
+                    backgroundColor: 'rgba(212, 168, 67, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN') + ' ₫';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + ' ₫';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+    
+    // Export to CSV function
+    function exportToCSV() {
+        let csv = 'Báo Cáo Kinh Doanh - Bò Nhúng Giấm Ngày Xưa\n';
+        csv += 'Từ ngày: {{ start_date|date:"d/m/Y" }}, Đến ngày: {{ end_date|date:"d/m/Y" }}\n\n';
+        
+        csv += 'TỔNG QUAN\n';
+        csv += 'Tổng đơn hàng,{{ summary.total_orders }}\n';
+        csv += 'Tổng doanh thu,{{ summary.total_revenue|floatformat:0 }}\n';
+        csv += 'Tổng giảm giá,{{ summary.total_discount|floatformat:0 }}\n';
+        csv += 'Giá trị TB/Đơn,{{ summary.average_order_value|floatformat:0 }}\n\n';
+        
+        csv += 'TOP MÓN BÁN CHẠY\n';
+        csv += 'Hạng,Tên món,Danh mục,Số lượng,Doanh thu\n';
+        {% for item in top_items %}
+        csv += '{{ forloop.counter }},{{ item.menu_item__name }},{{ item.menu_item__category__name }},{{ item.quantity_sold }},{{ item.revenue|floatformat:0 }}\n';
+        {% endfor %}
+        
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'bao-cao-{{ start_date|date:"Y-m-d" }}.csv';
+        link.click();
+    }
+    
+    // Animate cards on load
+    window.addEventListener('DOMContentLoaded', function() {
+        gsap.from('.summary-card', {
+            y: 30,
+            opacity: 0,
+            duration: 0.6,
+            stagger: 0.1,
+            ease: 'power2.out'
+        });
+        
+        gsap.from('.chart-section', {
+            scrollTrigger: {
+                trigger: '.chart-section',
+                start: 'top 80%'
+            },
+            y: 50,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.2,
+            ease: 'power2.out'
+        });
+    });
+</script>
+{% endblock %}
