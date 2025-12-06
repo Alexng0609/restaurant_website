@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load custom_filters %}
+
+{% block title %}Xác Nhận Đơn Hàng - Bò Nhúng Giấm Ngày Xưa{% endblock %}
+
+{% block content %}
+<style>
+    .confirmation-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .confirmation-card {
+        background: var(--card-bg);
+        border-radius: 10px;
+        padding: 3rem 2rem;
+        box-shadow: 0 4px 6px var(--shadow);
+        border: 2px solid var(--border-color);
+        text-align: center;
+    }
+    
+    .success-icon {
+        font-size: 5rem;
+        margin-bottom: 1.5rem;
+        animation: scaleIn 0.5s ease;
+    }
+    
+    @keyframes scaleIn {
+        from {
+            transform: scale(0);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+    
+    .confirmation-title {
+        font-size: 2rem;
+        color: #28a745;
+        margin-bottom: 1rem;
+    }
+    
+    .order-number {
+        font-size: 1.5rem;
+        color: var(--text-color);
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: rgba(212, 168, 67, 0.1);
+        border-radius: 8px;
+        display: inline-block;
+    }
+    
+    .order-number strong {
+        color: #D4A843;
+    }
+    
+    .confirmation-message {
+        color: var(--text-color);
+        margin-bottom: 2rem;
+        line-height: 1.8;
+        opacity: 0.9;
+    }
+    
+    .order-details {
+        text-align: left;
+        margin-top: 2rem;
+        padding: 2rem;
+        background: var(--border-color);
+        border-radius: 8px;
+    }
+    
+    .detail-section {
+        margin-bottom: 1.5rem;
+    }
+    
+    .detail-title {
+        font-weight: 700;
+        color: #D4A843;
+        margin-bottom: 0.75rem;
+        font-size: 1.1rem;
+    }
+    
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-color);
+    }
+    
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+    
+    .detail-label {
+        font-weight: 600;
+    }
+    
+    .detail-value {
+        font-weight: 700;
+        color: #D4A843;
+    }
+    
+    .total-row {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 3px solid #D4A843;
+        font-size: 1.3rem;
+    }
+    
+    .order-items {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .order-items li {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        color: var(--text-color);
+    }
+    
+    .order-items li:last-child {
+        border-bottom: none;
+    }
+    
+    .item-name {
+        font-weight: 600;
+    }
+    
+    .item-quantity {
+        opacity: 0.8;
+    }
+    
+    .item-price {
+        font-weight: 700;
+        color: #D4A843;
+    }
+    
+    .confirmation-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .btn {
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: 0.3s;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: #D4A843;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #B8860B;
+    }
+    
+    .btn-secondary {
+        background: var(--card-bg);
+        color: var(--text-color);
+        border: 2px solid var(--border-color);
+    }
+    
+    .btn-secondary:hover {
+        border-color: #D4A843;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 700;
+        margin-top: 1rem;
+    }
+    
+    .status-pending {
+        background: #ffc107;
+        color: #000;
+    }
+    
+    .points-earned {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #D4A843 0%, #B8860B 100%);
+        border-radius: 8px;
+        color: white;
+        text-align: center;
+    }
+    
+    .points-earned strong {
+        font-size: 1.5rem;
+        display: block;
+        margin-top: 0.5rem;
+    }
+</style>
+
+<div class="confirmation-container">
+    <div class="confirmation-card">
+        <div class="success-icon">✅</div>
+        
+        <h1 class="confirmation-title">Đặt Hàng Thành Công!</h1>
+        
+        <div class="order-number">
+            Mã đơn hàng: <strong>#{{ order.id }}</strong>
+        </div>
+        
+        <p class="confirmation-message">
+            Cảm ơn bạn đã đặt hàng tại <strong>Bò Nhúng Giấm Ngày Xưa</strong>!<br>
+            Đơn hàng của bạn đang được xử lý và sẽ sớm được giao đến địa chỉ của bạn.
+        </p>
+        
+        <div class="status-badge status-pending">
+            📋 {{ order.get_status_display }}
+        </div>
+        
+        <!-- Order Details -->
+        <div class="order-details">
+            <!-- Customer Information -->
+            <div class="detail-section">
+                <div class="detail-title">👤 Thông Tin Khách Hàng</div>
+                <div class="detail-row">
+                    <span class="detail-label">Họ và Tên:</span>
+                    <span>{{ order.customer_name|default:"N/A" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Số Điện Thoại:</span>
+                    <span>{{ order.phone|default:"N/A" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Địa Chỉ:</span>
+                    <span>{{ order.delivery_address|default:"N/A" }}</span>
+                </div>
+            </div>
+            
+            <!-- Order Items -->
+            <div class="detail-section">
+                <div class="detail-title">🍽️ Các Món Đã Đặt</div>
+                <ul class="order-items">
+                    {% for item in order.items.all %}
+                    <li>
+                        <div>
+                            <span class="item-name">{{ item.menu_item.name }}</span><br>
+                            <span class="item-quantity">{{ item.quantity }} × {{ item.price|vnd_format }} ₫</span>
+                        </div>
+                        <span class="item-price">{{ item.subtotal|vnd_format }} ₫</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <!-- Payment Summary -->
+            <div class="detail-section">
+                <div class="detail-title">💰 Chi Tiết Thanh Toán</div>
+                <div class="detail-row">
+                    <span class="detail-label">Tạm tính:</span>
+                    <span class="detail-value">{{ order.total_amount|vnd_format }} ₫</span>
+                </div>
+                {% if order.discount_applied > 0 %}
+                <div class="detail-row">
+                    <span class="detail-label">Giảm giá:</span>
+                    <span class="detail-value">-{{ order.discount_applied|vnd_format }} ₫</span>
+                </div>
+                {% endif %}
+                <div class="detail-row">
+                    <span class="detail-label">Phí giao hàng:</span>
+                    <span>Miễn phí</span>
+                </div>
+                <div class="detail-row total-row">
+                    <span class="detail-label">Tổng cộng:</span>
+                    <span class="detail-value">{{ order.total_amount|vnd_format }} ₫</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Phương thức:</span>
+                    <span>{{ order.get_payment_method_display|default:"Thanh toán khi nhận hàng" }}</span>
+                </div>
+            </div>
+        </div>
+        
+        {% if order.points_earned > 0 and user.is_authenticated %}
+        <div class="points-earned">
+            🎉 Bạn đã nhận được điểm thưởng!
+            <strong>+{{ order.points_earned|intcomma }} điểm</strong>
+        </div>
+        {% endif %}
+        
+        <div class="confirmation-actions">
+            <a href="{% url 'order_history' %}" class="btn btn-secondary">📋 Xem Đơn Hàng</a>
+            <a href="{% url 'menu' %}" class="btn btn-secondary">🍽️ Tiếp Tục Mua Hàng</a>
+            <a href="{% url 'index' %}" class="btn btn-primary">🏠 Về Trang Chủ</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

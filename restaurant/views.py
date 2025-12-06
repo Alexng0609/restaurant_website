@@ -26,6 +26,13 @@ from django.contrib.auth.models import User
 from .forms import CustomSignupForm
 from django.shortcuts import render, get_object_or_404
 from .models import MenuItem
+from django.http import JsonResponse
+from .cart_utils import (
+    get_or_create_cart,
+    add_to_cart,
+    update_cart_item,
+    remove_from_cart,
+)
 
 
 def index(request):
@@ -857,6 +864,208 @@ def sales_reports(request):
     }
 
     return render(request, "sales_reports.html", context)
+
+
+def add_to_cart_view(request, item_id):
+    """Add item to cart"""
+    if request.method == "POST":
+        try:
+            quantity = int(request.POST.get("quantity", 1))
+            cart_item = add_to_cart(request, item_id, quantity)
+            cart = get_or_create_cart(request)
+
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                # AJAX request
+                return JsonResponse(
+                    {
+                        "success": True,
+                        "message": f"Đã thêm {cart_item.menu_item.name} vào giỏ hàng",
+                        "cart_total_items": cart.total_items,
+                        "cart_total_price": float(cart.total_price),
+                    }
+                )
+            else:
+                messages.success(
+                    request, f"Đã thêm {cart_item.menu_item.name} vào giỏ hàng!"
+                )
+                return redirect("cart_view")
+
+        except MenuItem.DoesNotExist:
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return JsonResponse(
+                    {"success": False, "error": "Món ăn không tồn tại"}, status=404
+                )
+            else:
+                messages.error(request, "Món ăn không tồn tại!")
+                return redirect("menu")
+
+        except Exception as e:
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return JsonResponse({"success": False, "error": str(e)}, status=500)
+            else:
+                messages.error(request, f"Lỗi: {str(e)}")
+                return redirect("menu")
+
+    return redirect("menu")
+
+
+def cart_view(request):
+    """Display cart contents"""
+    cart = get_or_create_cart(request)
+    cart_items = cart.items.select_related("menu_item").all()
+
+    context = {
+        "cart": cart,
+        "items": cart_items,
+    }
+    return render(request, "cart.html", context)
+
+
+def update_cart_item_view(request, item_id):
+    """Update cart item quantity"""
+    if request.method == "POST":
+        try:
+            quantity = int(request.POST.get("quantity", 1))
+
+            if quantity > 0:
+                cart_item = update_cart_item(request, item_id, quantity)
+                cart = get_or_create_cart(request)
+
+                if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                    return JsonResponse(
+                        {
+                            "success": True,
+                            "message": "Đã cập nhật giỏ hàng",
+                            "cart_total_items": cart.total_items,
+                            "cart_total_price": float(cart.total_price),
+                            "item_subtotal": float(cart_item.subtotal)
+                            if cart_item
+                            else 0,
+                        }
+                    )
+                else:
+                    messages.success(request, "Đã cập nhật giỏ hàng!")
+            else:
+                # Remove item if quantity is 0
+                remove_from_cart(request, item_id)
+                messages.success(request, "Đã xóa món khỏi giỏ hàng!")
+
+            return redirect("cart_view")
+
+        except Exception as e:
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return JsonResponse({"success": False, "error": str(e)}, status=500)
+            else:
+                messages.error(request, f"Lỗi: {str(e)}")
+                return redirect("cart_view")
+
+    return redirect("cart_view")
+
+
+def remove_from_cart_view(request, item_id):
+    """Remove item from cart"""
+    if request.method == "POST":
+        try:
+            remove_from_cart(request, item_id)
+            cart = get_or_create_cart(request)
+
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return JsonResponse(
+                    {
+                        "success": True,
+                        "message": "Đã xóa món khỏi giỏ hàng",
+                        "cart_total_items": cart.total_items,
+                        "cart_total_price": float(cart.total_price),
+                    }
+                )
+            else:
+                messages.success(request, "Đã xóa món khỏi giỏ hàng!")
+
+            return redirect("cart_view")
+
+        except Exception as e:
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return JsonResponse({"success": False, "error": str(e)}, status=500)
+            else:
+                messages.error(request, f"Lỗi: {str(e)}")
+                return redirect("cart_view")
+
+    return redirect("cart_view")
+
+
+def checkout_view(request):
+    """Checkout - order summary and payment"""
+    cart = get_or_create_cart(request)
+    cart_items = cart.items.select_related("menu_item").all()
+
+    if not cart_items:
+        messages.warning(request, "Giỏ hàng trống!")
+        return redirect("menu")
+
+    if request.method == "POST":
+        try:
+            with transaction.atomic():
+                # Create order from cart
+                order = Order.objects.create(
+                    customer=request.user if request.user.is_authenticated else None,
+                    customer_name=request.POST.get("customer_name", ""),
+                    phone=request.POST.get("phone", ""),
+                    delivery_address=request.POST.get("delivery_address", ""),
+                    payment_method=request.POST.get("payment_method", "cod"),
+                    special_instructions=request.POST.get("special_instructions", ""),
+                )
+
+                # Create order items from cart
+                for cart_item in cart_items:
+                    OrderItem.objects.create(
+                        order=order,
+                        menu_item=cart_item.menu_item,
+                        quantity=cart_item.quantity,
+                        price=cart_item.menu_item.price,
+                        subtotal=cart_item.subtotal,
+                    )
+
+                # Calculate order total
+                order.calculate_total()
+
+                # Add points to customer if authenticated
+                if request.user.is_authenticated and hasattr(request.user, "profile"):
+                    request.user.profile.add_points(order.points_earned)
+
+                # Clear cart
+                cart.clear()
+
+                messages.success(
+                    request, f"Đặt hàng thành công! Mã đơn hàng: #{order.id}"
+                )
+                return redirect("order_confirmation", order_id=order.id)
+
+        except Exception as e:
+            messages.error(request, f"Lỗi đặt hàng: {str(e)}")
+            return redirect("checkout")
+
+    # GET request - show checkout form
+    context = {
+        "cart": cart,
+        "items": cart_items,
+        "user": request.user,
+    }
+    return render(request, "checkout_cart.html", context)
+
+
+def order_confirmation_view(request, order_id):
+    """Order confirmation page"""
+    if request.user.is_authenticated:
+        order = get_object_or_404(Order, id=order_id, customer=request.user)
+    else:
+        # For guest checkout, allow viewing order by ID only
+        # In production, you might want to add a token for security
+        order = get_object_or_404(Order, id=order_id)
+
+    context = {
+        "order": order,
+    }
+    return render(request, "order_confirmation.html", context)
 
 
 @staff_member_required

@@ -239,3 +239,65 @@ class RewardRedemption(models.Model):
 
     def __str__(self):
         return f"{self.customer.username} - {self.reward.name}"
+
+
+class Cart(models.Model):
+    """Shopping cart for customers"""
+
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="cart", null=True, blank=True
+    )
+    session_key = models.CharField(max_length=100, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        if self.user:
+            return f"Cart for {self.user.username}"
+        return f"Cart {self.session_key}"
+
+    @property
+    def total_items(self):
+        """Get total number of items in cart"""
+        return sum(item.quantity for item in self.items.all())
+
+    @property
+    def total_price(self):
+        """Calculate total price of all items"""
+        return sum(item.subtotal for item in self.items.all())
+
+    def clear(self):
+        """Remove all items from cart"""
+        self.items.all().delete()
+
+
+class CartItem(models.Model):
+    """Individual items in shopping cart"""
+
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
+    menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-added_at"]
+        unique_together = ["cart", "menu_item"]
+
+    def __str__(self):
+        return f"{self.quantity}x {self.menu_item.name}"
+
+    @property
+    def subtotal(self):
+        """Calculate subtotal for this cart item"""
+        return self.menu_item.price * self.quantity
+
+    def save(self, *args, **kwargs):
+        """Update cart's updated_at when cart item changes"""
+        super().save(*args, **kwargs)
+        from django.utils import timezone
+
+        self.cart.updated_at = timezone.now()
+        self.cart.save(update_fields=["updated_at"])

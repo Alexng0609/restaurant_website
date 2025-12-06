@@ -71,7 +71,6 @@
         box-shadow: 0 4px 6px var(--shadow);
         border: 1px solid var(--border-color);
         transition: var(--transition);
-        height: 560px;
         display: flex;
         flex-direction: column;
     }
@@ -79,13 +78,6 @@
     .news-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 12px 20px var(--shadow);
-    }
-
-    /* Entire card clickable */
-    .card-link {
-        position: absolute;
-        inset: 0;
-        z-index: 1;
     }
 
     /* Admin controls above clickable layer */
@@ -117,6 +109,7 @@
         height: 250px;
         background: var(--border-color);
         overflow: hidden;
+        position: relative;
     }
 
     .news-media img {
@@ -148,7 +141,6 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        z-index: 10;
     }
 
     .news-title {
@@ -192,24 +184,77 @@
         color: #721c24;
     }
 
-    /* Add to order button */
+    /* Add to cart button */
+    .add-btn-form {
+        margin-top: auto;
+    }
+    
     .add-btn {
-        position: relative;
-        z-index: 20;
-        background: #D4A843;
-        padding: 10px 0;
         width: 100%;
+        background: #D4A843;
+        padding: 12px 0;
         text-align: center;
         border-radius: 8px;
         font-weight: 700;
         color: #fff;
-        text-decoration: none;
+        border: none;
+        cursor: pointer;
         transition: 0.25s;
-        margin-top: auto;
+        font-size: 1rem;
     }
 
     .add-btn:hover {
         background: #b88c36;
+        transform: translateY(-2px);
+    }
+    
+    .add-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    /* Toast notification */
+    .toast {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: #28a745;
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 9999;
+        animation: slideIn 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    @keyframes slideIn {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .toast.hide {
+        animation: slideOut 0.3s ease forwards;
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(400px);
+            opacity: 0;
+        }
     }
 </style>
 
@@ -242,36 +287,36 @@
 
     <div class="news-card">
 
-        <!-- Entire card clickable -->
-        <a href="{% url 'menu_item_detail' item.id %}" class="card-link"></a>
-
         {% if user.is_staff %}
         <div class="admin-controls">
             <a href="/admin/restaurant/menuitem/{{ item.id }}/change/"
-               class="admin-btn"
-               onclick="event.stopPropagation();">
+               class="admin-btn">
                 ✏️ Sửa
             </a>
         </div>
         {% endif %}
 
-        <div class="news-media">
-            {% if item.image %}
-                <img src="{{ item.image.url }}" alt="{{ item.name }}">
-            {% else %}
-                <div style="height:100%; display:flex; justify-content:center; align-items:center; font-size:4rem; opacity:0.3;">
-                    🍜
-                </div>
-            {% endif %}
-        </div>
+        <a href="{% url 'menu_item_detail' item.id %}">
+            <div class="news-media">
+                {% if item.image %}
+                    <img src="{{ item.image.url }}" alt="{{ item.name }}">
+                {% else %}
+                    <div style="height:100%; display:flex; justify-content:center; align-items:center; font-size:4rem; opacity:0.3;">
+                        🍜
+                    </div>
+                {% endif %}
+            </div>
 
-        <div class="category-tag-overlay">
-            {{ item.category.name }}
-        </div>
+            <div class="category-tag-overlay">
+                {{ item.category.name }}
+            </div>
+        </a>
 
         <div class="news-content">
-            <h2 class="news-title">{{ item.name }}</h2>
-            <p class="news-text">{{ item.description }}</p>
+            <a href="{% url 'menu_item_detail' item.id %}" style="text-decoration: none;">
+                <h2 class="news-title">{{ item.name }}</h2>
+                <p class="news-text">{{ item.description }}</p>
+            </a>
 
             <div class="price-tag">{{ item.price|vnd_format }} ₫</div>
 
@@ -279,15 +324,102 @@
                 {% if item.is_available %}✓ Còn hàng{% else %}✗ Hết hàng{% endif %}
             </div>
 
-            <!-- Add to order -->
-            <a href="#" class="add-btn" onclick="event.stopPropagation();">
-                ➕ Thêm vào giỏ
-            </a>
+            <!-- Add to cart form -->
+            <form class="add-btn-form add-to-cart-form" method="post" action="{% url 'add_to_cart' item.id %}" data-item-name="{{ item.name }}">
+                {% csrf_token %}
+                <input type="hidden" name="quantity" value="1">
+                <button type="submit" class="add-btn" {% if not item.is_available %}disabled{% endif %}>
+                    ➕ Thêm vào giỏ
+                </button>
+            </form>
         </div>
 
     </div>
 
     {% endfor %}
 </div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle add to cart forms
+    document.querySelectorAll('.add-to-cart-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const button = this.querySelector('.add-btn');
+            const originalText = button.textContent;
+            const itemName = this.dataset.itemName;
+            
+            // Disable button
+            button.disabled = true;
+            button.textContent = 'Đang thêm...';
+            
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                },
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update cart badge
+                    const cartBadge = document.getElementById('cart-count');
+                    if (cartBadge) {
+                        cartBadge.textContent = data.cart_total_items;
+                    }
+                    
+                    // Show success toast
+                    showToast(`✓ Đã thêm "${itemName}" vào giỏ hàng!`, 'success');
+                    
+                    // Re-enable button
+                    button.disabled = false;
+                    button.textContent = originalText;
+                } else {
+                    showToast(data.error || 'Lỗi khi thêm vào giỏ hàng', 'error');
+                    button.disabled = false;
+                    button.textContent = originalText;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Lỗi kết nối mạng', 'error');
+                button.disabled = false;
+                button.textContent = originalText;
+            });
+        });
+    });
+    
+    // Toast notification function
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.style.background = type === 'success' ? '#28a745' : '#dc3545';
+        toast.innerHTML = `
+            <span style="font-size: 1.5rem;">${type === 'success' ? '✓' : '✗'}</span>
+            <span>${message}</span>
+        `;
+        
+        container.appendChild(toast);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            toast.classList.add('hide');
+            setTimeout(() => {
+                container.removeChild(toast);
+            }, 300);
+        }, 3000);
+    }
+});
+</script>
 
 {% endblock %}

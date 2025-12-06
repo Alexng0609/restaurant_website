@@ -145,6 +145,56 @@
             transform: translateY(-2px);
         }
         
+        /* Cart Icon Styles */
+        .cart-link {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.15);
+            padding: 0.6rem 1.2rem;
+            border-radius: 25px;
+            transition: var(--transition);
+            font-weight: 600;
+        }
+        
+        .cart-link:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px) scale(1.05);
+        }
+        
+        .cart-icon {
+            font-size: 1.2rem;
+        }
+        
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+        
         /* Theme Toggle Button */
         .theme-toggle {
             background: rgba(255,255,255,0.2);
@@ -198,6 +248,12 @@
             border-left: 4px solid #17a2b8;
         }
         
+        .message.warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        
         .close-message {
             position: absolute;
             right: 15px;
@@ -224,207 +280,97 @@
         
         /* Main Content */
         main {
-            min-height: calc(100vh - 200px);
+            min-height: 60vh;
             padding: 2rem 0;
         }
         
         /* Footer */
         footer {
-            background: var(--card-bg);
-            color: var(--text-color);
-            text-align: center;
-            padding: 2rem 0;
-            margin-top: 4rem;
-            box-shadow: 0 -2px 10px var(--shadow);
-            transition: var(--transition);
-            border-top: 3px solid var(--primary-color);
-        }
-        
-        footer .footer-content {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            align-items: center;
-        }
-        
-        footer .social-links {
-            display: flex;
-            gap: 1rem;
-        }
-        
-        footer .social-links a {
-            color: var(--primary-color);
-            font-size: 1.5rem;
-            transition: var(--transition);
-        }
-        
-        footer .social-links a:hover {
-            transform: translateY(-5px) scale(1.2);
-            color: var(--accent-color);
-        }
-        
-        footer a[href^="https://www.google.com"],
-        footer a[href^="tel:"] {
-            transition: var(--transition);
-        }
-        
-        footer a[href^="https://www.google.com"]:hover,
-        footer a[href^="tel:"]:hover {
-            color: var(--primary-color) !important;
-            text-decoration: underline;
-        }
-        
-        footer .fas {
-            margin-right: 0.5rem;
-            color: var(--primary-color);
-        }
-        
-        /* Buttons */
-        .btn {
-            display: inline-block;
-            padding: 12px 30px;
             background: var(--nav-bg);
             color: white;
+            padding: 2rem 0;
+            margin-top: 4rem;
+            text-align: center;
+        }
+        
+        footer a {
+            color: white;
             text-decoration: none;
-            border-radius: 25px;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
             transition: var(--transition);
-            box-shadow: 0 4px 15px var(--shadow);
         }
         
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px var(--shadow);
+        footer a:hover {
+            color: #FFD700;
         }
         
-        .btn-secondary {
-            background: var(--cta-bg);
-            box-shadow: 0 4px 15px rgba(229, 197, 101, 0.4);
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0;
         }
         
-        .btn-secondary:hover {
-            box-shadow: 0 6px 20px rgba(229, 197, 101, 0.6);
-        }
-        
-        /* Cards */
-        .card {
-            background: var(--card-bg);
-            border-radius: 10px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px var(--shadow);
-            margin-bottom: 2rem;
-            transition: var(--transition);
-            border: 1px solid var(--border-color);
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 15px var(--shadow);
-        }
-        
-        /* Forms */
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: var(--text-color);
-        }
-        
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: var(--transition);
-            background: var(--card-bg);
-            color: var(--text-color);
-        }
-        
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-        
-        /* Currency Badge */
-        .currency {
-            color: var(--primary-color);
-            font-weight: bold;
-        }
-        
-        /* Loading Animation */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
+        .social-links a {
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.2);
             border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
+            transition: var(--transition);
         }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .social-links a:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-3px);
         }
         
-        /* Responsive */
+        /* Responsive Design */
         @media (max-width: 768px) {
-            nav .logo {
-                font-size: 1.1rem;
-            }
-            
-            nav .logo img {
-                height: 50px;
-                width: 50px;
+            nav .container {
+                flex-direction: column;
             }
             
             nav .nav-links {
-                gap: 0.5rem;
-                font-size: 0.9rem;
+                width: 100%;
+                justify-content: center;
             }
             
-            .card {
-                padding: 1.5rem;
+            .cart-link {
+                order: -1;
             }
         }
-        
-        /* Fade in animations */
-        .fade-in {
-            opacity: 0;
-        }
-        
-        .fade-in.active {
-            opacity: 1;
-        }
     </style>
-    {% block extra_css %}{% endblock %}
 </head>
 <body>
     <nav>
         <div class="container">
             <a href="{% url 'index' %}" class="logo">
-                <img src="{% static 'images/logo.jpg' %}" alt="Bò Nhúng Giấm Ngày Xưa Logo" onerror="this.style.display='none'">
+                <img src="{% static 'images/logo.jpg' %}" alt="Logo" onerror="this.style.display='none'">
                 <div class="logo-text">
-                    <span class="main">Bò Nhúng Giấm Ngày Xưa</span>
-                    <span class="sub">Món Ăn Truyền Thống Việt Nam</span>
+                    <span class="main">Bò Nhúng Giấm</span>
+                    <span class="sub">Ngày Xưa</span>
                 </div>
             </a>
             <ul class="nav-links">
                 <li><a href="{% url 'index' %}">Trang Chủ</a></li>
                 <li><a href="{% url 'feeds' %}">Tin Tức</a></li>
                 <li><a href="{% url 'menu' %}">Thực Đơn</a></li>
+                
+                <!-- CART ICON WITH BADGE -->
+                <li>
+                    <a href="{% url 'cart_view' %}" class="cart-link">
+                        <i class="fas fa-shopping-cart cart-icon"></i>
+                        <span>Giỏ Hàng</span>
+                        {% if cart_count > 0 %}
+                        <span class="cart-badge" id="cart-count">{{ cart_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                
                 {% if user.is_authenticated %}
-                    <li><a href="{% url 'place_order' %}">Đặt Món</a></li>
                     <li><a href="{% url 'order_history' %}">Lịch Sử</a></li>
                     
                     {% if user.is_staff %}
@@ -483,23 +429,23 @@
                     <div style="margin-bottom: 0.5rem;">
                         <i class="fas fa-map-marker-alt"></i>
                         <a href="https://www.google.com/maps/search/?api=1&query=238+Nguyễn+Hiền,+KDC+91B,+Tân+An,+Cần+Thơ" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        style="color: inherit; text-decoration: none;">
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           style="color: inherit; text-decoration: none;">
                             238 Nguyễn Hiền, KDC 91B, Tân An, Cần Thơ
                         </a>
                     </div>
                     <div style="margin-bottom: 0.5rem;">
                         <i class="fas fa-envelope"></i>
                         <a href="mailto:laubonhunggiamngayxua@gmail.com" 
-                        style="color: inherit; text-decoration: none;">
+                           style="color: inherit; text-decoration: none;">
                             laubonhunggiamngayxua@gmail.com
                         </a>
                     </div>
                     <div>
                         <i class="fas fa-phone"></i>
                         <a href="tel:0706623568" 
-                        style="color: inherit; text-decoration: none;">
+                           style="color: inherit; text-decoration: none;">
                             070 662 3568
                         </a>
                     </div>
@@ -527,8 +473,6 @@
                 duration: 0.8,
                 ease: 'power3.out'
             });
-            
-            // DON'T animate messages with GSAP - let the timer handle them
             
             // Animate cards on scroll
             gsap.utils.toArray('.card').forEach((card, index) => {

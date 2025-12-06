@@ -1,0 +1,376 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load custom_filters %}
+
+{% block title %}Giỏ Hàng - Bò Nhúng Giấm Ngày Xưa{% endblock %}
+
+{% block content %}
+<style>
+    .cart-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .cart-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .cart-header h1 {
+        font-size: 2.5rem;
+        color: var(--text-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .cart-header p {
+        color: var(--text-color);
+        opacity: 0.8;
+    }
+    
+    .cart-empty {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--card-bg);
+        border-radius: 10px;
+        border: 2px solid var(--border-color);
+    }
+    
+    .cart-empty h2 {
+        color: var(--text-color);
+        margin-bottom: 1rem;
+    }
+    
+    .cart-table {
+        background: var(--card-bg);
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px var(--shadow);
+        border: 2px solid var(--border-color);
+        margin-bottom: 2rem;
+    }
+    
+    .cart-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .cart-table thead {
+        background: linear-gradient(135deg, #D4A843 0%, #B8860B 100%);
+        color: white;
+    }
+    
+    .cart-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+    }
+    
+    .cart-table td {
+        padding: 1.5rem 1rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-color);
+    }
+    
+    .cart-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .cart-table tbody tr:hover {
+        background: var(--border-color);
+    }
+    
+    .item-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .item-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+        background: var(--border-color);
+    }
+    
+    .item-details strong {
+        display: block;
+        font-size: 1.1rem;
+        margin-bottom: 0.3rem;
+        color: var(--text-color);
+    }
+    
+    .item-details small {
+        opacity: 0.7;
+        display: block;
+        color: var(--text-color);
+    }
+    
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .quantity-control input {
+        width: 70px;
+        padding: 0.5rem;
+        text-align: center;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: var(--text-color);
+        font-weight: 600;
+    }
+    
+    .quantity-control button {
+        padding: 0.5rem 1rem;
+        background: #D4A843;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: 0.3s;
+    }
+    
+    .quantity-control button:hover {
+        background: #B8860B;
+    }
+    
+    .remove-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: 0.3s;
+    }
+    
+    .remove-btn:hover {
+        background: #c82333;
+    }
+    
+    .price-text {
+        font-weight: 700;
+        color: #D4A843;
+        font-size: 1.1rem;
+    }
+    
+    .cart-summary {
+        background: var(--card-bg);
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px var(--shadow);
+        border: 2px solid var(--border-color);
+    }
+    
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .summary-row:last-child {
+        border-bottom: none;
+        margin-top: 1rem;
+        padding-top: 1.5rem;
+        border-top: 3px solid #D4A843;
+    }
+    
+    .summary-label {
+        font-weight: 600;
+        color: var(--text-color);
+        font-size: 1.1rem;
+    }
+    
+    .summary-value {
+        font-weight: 700;
+        color: #D4A843;
+        font-size: 1.1rem;
+    }
+    
+    .summary-total .summary-label,
+    .summary-total .summary-value {
+        font-size: 1.5rem;
+    }
+    
+    .cart-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        justify-content: space-between;
+    }
+    
+    .btn {
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: 0.3s;
+        display: inline-block;
+        text-align: center;
+    }
+    
+    .btn-primary {
+        background: #D4A843;
+        color: white;
+        border: none;
+    }
+    
+    .btn-primary:hover {
+        background: #B8860B;
+    }
+    
+    .btn-secondary {
+        background: var(--card-bg);
+        color: var(--text-color);
+        border: 2px solid var(--border-color);
+    }
+    
+    .btn-secondary:hover {
+        border-color: #D4A843;
+        color: #D4A843;
+    }
+    
+    @media (max-width: 768px) {
+        .cart-table {
+            overflow-x: auto;
+        }
+        
+        .cart-actions {
+            flex-direction: column;
+        }
+        
+        .item-info {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+</style>
+
+<div class="cart-container">
+    <div class="cart-header">
+        <h1>🛒 Giỏ Hàng</h1>
+        <p>Xem lại đơn hàng của bạn trước khi thanh toán</p>
+    </div>
+
+    {% if items %}
+    <div class="cart-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Món Ăn</th>
+                    <th>Giá</th>
+                    <th>Số Lượng</th>
+                    <th>Thành Tiền</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ci in items %}
+                {% if ci.menu_item %}
+                <tr>
+                    <td>
+                        <div class="item-info">
+                            {% if ci.menu_item.image %}
+                            <img src="{{ ci.menu_item.image.url }}" alt="{{ ci.menu_item.name }}" class="item-image">
+                            {% else %}
+                            <div class="item-image" style="display: flex; align-items: center; justify-content: center; font-size: 2rem; opacity: 0.3;">🍜</div>
+                            {% endif %}
+                            <div class="item-details">
+                                <strong>{{ ci.menu_item.name }}</strong>
+                                <small>{{ ci.menu_item.description|truncatechars:60 }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="price-text">{{ ci.menu_item.price|vnd_format }} ₫</span></td>
+                    <td>
+                        <form class="update-form" method="post" action="{% url 'update_cart_item' ci.menu_item.id %}">
+                            {% csrf_token %}
+                            <div class="quantity-control">
+                                <input type="number" name="quantity" value="{{ ci.quantity }}" min="1" max="99">
+                                <button type="submit">Cập Nhật</button>
+                            </div>
+                        </form>
+                    </td>
+                    <td><span class="price-text">{{ ci.subtotal|vnd_format }} ₫</span></td>
+                    <td>
+                        <form method="post" action="{% url 'remove_from_cart' ci.menu_item.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="remove-btn">🗑️ Xóa</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="cart-summary">
+        <div class="summary-row">
+            <span class="summary-label">Tổng số món:</span>
+            <span class="summary-value">{{ cart.total_items }} món</span>
+        </div>
+        <div class="summary-row summary-total">
+            <span class="summary-label">Tổng cộng:</span>
+            <span class="summary-value">{{ cart.total_price|vnd_format }} ₫</span>
+        </div>
+    </div>
+
+    <div class="cart-actions">
+        <a href="{% url 'menu' %}" class="btn btn-secondary">← Tiếp Tục Mua Hàng</a>
+        <a href="{% url 'checkout' %}" class="btn btn-primary">Tiến Hành Thanh Toán →</a>
+    </div>
+
+    {% else %}
+    <div class="cart-empty">
+        <h2>🛒 Giỏ hàng trống</h2>
+        <p>Bạn chưa có món ăn nào trong giỏ hàng.</p>
+        <a href="{% url 'menu' %}" class="btn btn-primary" style="margin-top: 1rem;">Xem Thực Đơn</a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle update form submissions
+    document.querySelectorAll('.update-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const fd = new FormData(form);
+            
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': fd.get('csrfmiddlewaretoken')
+                },
+                body: fd,
+                credentials: 'same-origin'
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    // Update cart badge
+                    const badge = document.getElementById('cart-count');
+                    if (badge) badge.textContent = data.cart_total_items;
+                    
+                    // Reload page to show updated totals
+                    location.reload();
+                } else {
+                    alert(data.error || 'Lỗi cập nhật giỏ hàng');
+                }
+            })
+            .catch(() => alert('Lỗi kết nối mạng'));
+        });
+    });
+});
+</script>
+
+{% endblock %}
