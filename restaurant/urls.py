@@ -24,4 +24,5 @@ urlpatterns = [
     path("reports/users/", views.user_reports, name="user_reports"),
     path("reports/sales/", views.sales_reports, name="sales_reports"),
     path("reports/", views.reports_menu, name="reports_menu"),
+    path("menu/item/<int:item_id>/", views.menu_item_detail, name="menu_item_detail"),
 ]

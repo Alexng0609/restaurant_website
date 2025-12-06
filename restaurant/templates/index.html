@@ -289,8 +289,15 @@
         <a href="{% url 'feed_detail' news.id %}" class="news-card">
             <div class="news-card-media">
                 {% if news.video %}
-                    <!-- Video Preview -->
-                    <video preload="metadata">
+                    <!-- Video Preview with Autoplay -->
+                    <video 
+                        autoplay 
+                        loop 
+                        muted 
+                        playsinline 
+                        preload="auto"
+                        class="news-video"
+                        style="pointer-events: none;">
                         <source src="{{ news.video.url }}" type="video/mp4">
                     </video>
                     <div class="video-badge">
@@ -360,4 +367,49 @@
     <a href="{% url 'signup' %}" class="btn" style="background: white; color: #D4A843; font-weight: bold;">Đăng Ký Ngay</a>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Force autoplay videos on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Find all video elements
+        const videos = document.querySelectorAll('.news-video');
+        
+        videos.forEach(video => {
+            // Ensure video is muted (required for autoplay)
+            video.muted = true;
+            video.volume = 0;
+            
+            // Try to play
+            const playPromise = video.play();
+            
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        console.log('Video autoplay started successfully');
+                    })
+                    .catch(error => {
+                        console.log('Autoplay prevented:', error);
+                        // If autoplay fails, try again on user interaction
+                        document.addEventListener('click', function playOnClick() {
+                            video.play();
+                            document.removeEventListener('click', playOnClick);
+                        }, { once: true });
+                    });
+            }
+            
+            // Pause on hover to show overlay
+            const card = video.closest('.news-card');
+            if (card) {
+                card.addEventListener('mouseenter', () => {
+                    video.pause();
+                });
+                card.addEventListener('mouseleave', () => {
+                    video.play();
+                });
+            }
+        });
+    });
+</script>
 {% endblock %}

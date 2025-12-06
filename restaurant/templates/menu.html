@@ -5,507 +5,254 @@
 {% block title %}Thực Đơn - Bò Nhúng Giấm Ngày Xưa{% endblock %}
 
 {% block content %}
+
 <style>
     .page-header {
         text-align: center;
         margin-bottom: 3rem;
     }
-    
+
     .page-header h1 {
         font-size: 2.5rem;
         color: var(--text-color);
-        margin-bottom: 0.5rem;
     }
-    
+
+    .admin-add-button {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .admin-add-button .btn {
+        background: #D4A843;
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+        color: white;
+    }
+
     .category-filter {
         display: flex;
-        gap: 1rem;
         justify-content: center;
         flex-wrap: wrap;
+        gap: 1rem;
         margin-bottom: 3rem;
     }
-    
+
     .category-btn {
         padding: 10px 25px;
-        border: 2px solid var(--primary-color);
+        border: 2px solid #D4A843;
         background: var(--card-bg);
-        color: var(--primary-color);
+        color: var(--text-color);
         border-radius: 25px;
         cursor: pointer;
-        transition: var(--transition);
+        transition: all 0.3s;
         text-decoration: none;
         font-weight: 600;
     }
-    
+
     .category-btn:hover,
     .category-btn.active {
-        background: var(--nav-bg);
+        background: #D4A843;
         color: white;
-        border-color: var(--primary-color);
     }
-    
-    .menu-grid {
+
+    .news-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
         gap: 2rem;
-        margin-bottom: 3rem;
+        max-width: 1200px;
+        margin: 0 auto;
     }
-    
-    .menu-item {
+
+    .news-card {
         background: var(--card-bg);
         border-radius: 10px;
         overflow: hidden;
         box-shadow: 0 4px 6px var(--shadow);
-        transition: transform 0.3s, box-shadow 0.3s;
+        border: 1px solid var(--border-color);
+        transition: var(--transition);
+        position: relative;
+        height: 520px;
         display: flex;
         flex-direction: column;
-        cursor: pointer;
-        border: 2px solid transparent;
+        text-decoration: none;
+        color: inherit;
     }
-    
-    .menu-item:hover {
+
+    .news-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 8px 15px var(--shadow);
-        border-color: var(--primary-color);
+        box-shadow: 0 12px 20px var(--shadow);
     }
-    
-    .menu-item.unavailable {
-        opacity: 0.6;
-        cursor: not-allowed;
+
+    .admin-controls {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 50;
+        display: flex;
+        gap: 0.4rem;
     }
-    
-    .menu-item.unavailable:hover {
-        transform: none;
-        border-color: transparent;
+
+    .admin-btn {
+        background: rgba(0,0,0,0.6);
+        color: white;
+        padding: 0.45rem 0.9rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        text-decoration: none;
+        transition: 0.2s ease;
     }
-    
-    .menu-item img {
+
+    .admin-btn:hover {
+        background: #D4A843;
+        color: #fff;
+    }
+
+    .news-media {
         width: 100%;
-        height: 200px;
-        object-fit: cover;
+        height: 250px;
+        background: var(--border-color);
+        overflow: hidden;
     }
-    
-    .menu-item-content {
+
+    .news-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+
+    .news-card:hover .news-media img {
+        transform: scale(1.05);
+    }
+
+    .category-tag-overlay {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: rgba(212, 168, 67, 0.95);
+        color: white;
+        padding: 6px 14px;
+        font-size: 0.85rem;
+        border-radius: 20px;
+        font-weight: 700;
+    }
+
+    .news-content {
         padding: 1.5rem;
-        flex-grow: 1;
+        flex: 1;
         display: flex;
         flex-direction: column;
     }
-    
-    .menu-item h3 {
+
+    .news-title {
+        font-size: 1.4rem;
+        font-weight: bold;
         color: var(--text-color);
-        margin-bottom: 0.5rem;
-        font-size: 1.3rem;
+        margin-bottom: 0.7rem;
     }
-    
-    .menu-item .category-tag {
-        display: inline-block;
-        padding: 4px 12px;
-        background: var(--border-color);
-        color: var(--text-color);
-        border-radius: 15px;
-        font-size: 0.85rem;
-        margin-bottom: 0.5rem;
-        align-self: flex-start;
-    }
-    
-    .menu-item .description {
+
+    .news-text {
+        flex-grow: 1;
         color: var(--text-color);
         opacity: 0.8;
+        line-height: 1.5;
         margin-bottom: 1rem;
-        flex-grow: 1;
-        font-size: 0.95rem;
     }
-    
-    .menu-item .price {
-        font-size: 1.8rem;
-        color: var(--primary-color);
+
+    .price-tag {
+        font-size: 1.7rem;
+        color: #D4A843;
         font-weight: bold;
         margin-bottom: 1rem;
     }
-    
-    .menu-item .add-btn {
-        padding: 12px 20px;
-        background: var(--nav-bg);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 1rem;
-        font-weight: 600;
-        transition: var(--transition);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-    }
-    
-    .menu-item .add-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px var(--shadow);
-    }
-    
-    .menu-item .add-btn:active {
-        transform: translateY(0);
-    }
-    
-    .menu-item .add-btn.added {
-        background: #28a745;
-    }
-    
-    .menu-item .availability {
-        padding: 8px 15px;
-        border-radius: 5px;
+
+    .availability {
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-weight: bold;
         text-align: center;
-        font-weight: 600;
-        margin-bottom: 1rem;
+        font-size: 0.9rem;
     }
-    
-    .menu-item .available {
+
+    .available {
         background: #d4edda;
         color: #155724;
     }
-    
-    .menu-item .unavailable-badge {
+
+    .unavailable {
         background: #f8d7da;
         color: #721c24;
-    }
-    
-    .no-items {
-        text-align: center;
-        padding: 3rem;
-        color: var(--text-color);
-        opacity: 0.8;
-    }
-    
-    /* Cart Summary */
-    .cart-summary {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: var(--nav-bg);
-        color: white;
-        padding: 1.5rem;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        min-width: 280px;
-        z-index: 1000;
-        display: none;
-    }
-    
-    .cart-summary.show {
-        display: block;
-        animation: slideUp 0.3s ease;
-    }
-    
-    @keyframes slideUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .cart-summary h3 {
-        margin-bottom: 1rem;
-        font-size: 1.2rem;
-    }
-    
-    .cart-item {
-        display: flex;
-        justify-content: space-between;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid rgba(255,255,255,0.2);
-    }
-    
-    .cart-total {
-        font-size: 1.3rem;
-        font-weight: bold;
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 2px solid rgba(255,255,255,0.3);
-        display: flex;
-        justify-content: space-between;
-    }
-    
-    .cart-actions {
-        margin-top: 1rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .cart-btn {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: var(--transition);
-    }
-    
-    .checkout-btn {
-        background: white;
-        color: var(--primary-color);
-    }
-    
-    .clear-btn {
-        background: transparent;
-        color: white;
-        border: 2px solid white;
-    }
-    
-    .cart-btn:hover {
-        transform: scale(1.05);
-    }
-    
-    @media (max-width: 768px) {
-        .cart-summary {
-            left: 20px;
-            right: 20px;
-            min-width: auto;
-        }
     }
 </style>
 
 <div class="page-header">
-    <h1>Thực Đơn</h1>
-    <p>Khám phá các món ăn ngon của chúng tôi</p>
+    <h1>🍽️ Thực Đơn</h1>
 </div>
 
-<div class="category-filter">
-    <a href="{% url 'menu' %}" class="category-btn {% if not request.GET.category %}active{% endif %}">Tất Cả</a>
-    {% for category in categories %}
-    <a href="{% url 'menu' %}?category={{ category.id }}" 
-       class="category-btn {% if request.GET.category == category.id|stringformat:'s' %}active{% endif %}">
-        {{ category.name }}
+{% if user.is_staff %}
+<div class="admin-add-button">
+    <a href="/admin/restaurant/menuitem/add/" class="btn">
+        <i class="fas fa-plus-circle"></i> Thêm Món Ăn
     </a>
-    {% endfor %}
-</div>
-
-<div class="menu-grid">
-    {% if menu_items %}
-        {% for item in menu_items %}
-        <div class="menu-item {% if not item.is_available %}unavailable{% endif %}" 
-             data-id="{{ item.id }}"
-             data-name="{{ item.name }}"
-             data-price="{{ item.price }}">
-            {% if item.image %}
-            <img src="{{ item.image.url }}" alt="{{ item.name }}">
-            {% else %}
-            <div style="width: 100%; height: 200px; background: var(--nav-bg);"></div>
-            {% endif %}
-            <div class="menu-item-content">
-                <span class="category-tag">{{ item.category.name }}</span>
-                <h3>{{ item.name }}</h3>
-                <p class="description">{{ item.description }}</p>
-                <div class="price">{{ item.price|vnd_format }} <span class="currency">₫</span></div>
-                
-                {% if item.is_available %}
-                    {% if user.is_authenticated %}
-                    <button class="add-btn" onclick="addToCart({{ item.id }}, '{{ item.name }}', {{ item.price }})">
-                        <i class="fas fa-plus"></i> Thêm Vào Giỏ
-                    </button>
-                    {% else %}
-                    <a href="{% url 'login' %}" class="add-btn" style="text-decoration: none;">
-                        <i class="fas fa-sign-in-alt"></i> Đăng Nhập Để Đặt
-                    </a>
-                    {% endif %}
-                {% else %}
-                <div class="availability unavailable-badge">
-                    ✗ Tạm Hết Hàng
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        {% endfor %}
-    {% else %}
-    <div class="no-items" style="grid-column: 1 / -1;">
-        <h2>Chưa có món ăn</h2>
-        <p>Vui lòng quay lại sau!</p>
-    </div>
-    {% endif %}
-</div>
-
-{% if user.is_authenticated %}
-<!-- Cart Summary -->
-<div class="cart-summary" id="cartSummary">
-    <h3>🛒 Giỏ Hàng Của Bạn</h3>
-    <div id="cartItems"></div>
-    <div class="cart-total">
-        <span>Tổng Cộng:</span>
-        <span id="cartTotal">0 ₫</span>
-    </div>
-    <div class="cart-actions">
-        <button class="cart-btn checkout-btn" onclick="proceedToOrder()">
-            <i class="fas fa-shopping-cart"></i> Đặt Hàng Ngay
-        </button>
-        <button class="cart-btn clear-btn" onclick="clearCart()">
-            <i class="fas fa-trash"></i> Xóa Giỏ Hàng
-        </button>
-    </div>
 </div>
 {% endif %}
 
-<script>
-// Cart management
-let cart = JSON.parse(localStorage.getItem('restaurantCart')) || [];
+<div class="category-filter">
+    <a href="{% url 'menu' %}" class="category-btn {% if not selected_category %}active{% endif %}">
+        Tất Cả
+    </a>
+    {% for category in categories %}
+        <a href="{% url 'menu' %}?category={{ category.id }}"
+           class="category-btn {% if selected_category == category.id|stringformat:'s' %}active{% endif %}">
+            {{ category.name }}
+        </a>
+    {% endfor %}
+</div>
 
-// Update cart display
-function updateCartDisplay() {
-    const cartSummary = document.getElementById('cartSummary');
-    const cartItems = document.getElementById('cartItems');
-    const cartTotal = document.getElementById('cartTotal');
-    
-    if (cart.length === 0) {
-        cartSummary.classList.remove('show');
-        return;
-    }
-    
-    cartSummary.classList.add('show');
-    
-    // Group items by ID and count quantities
-    const groupedCart = cart.reduce((acc, item) => {
-        if (acc[item.id]) {
-            acc[item.id].quantity++;
-        } else {
-            acc[item.id] = { ...item, quantity: 1 };
-        }
-        return acc;
-    }, {});
-    
-    // Display cart items
-    cartItems.innerHTML = Object.values(groupedCart).map(item => `
-        <div class="cart-item">
-            <span>${item.name} x${item.quantity}</span>
-            <span>${(item.price * item.quantity).toLocaleString('vi-VN')} ₫</span>
+<div class="news-grid">
+    {% for item in menu_items %}
+
+    <!-- Whole card is clickable for guests -->
+    <a href="#" class="news-card">
+
+        {% if user.is_staff %}
+        <div class="admin-controls">
+            <a href="/admin/restaurant/menuitem/{{ item.id }}/change/"
+               class="admin-btn"
+               onclick="event.stopPropagation();">
+                ✏️ Sửa
+            </a>
         </div>
-    `).join('');
-    
-    // Calculate total
-    const total = cart.reduce((sum, item) => sum + parseFloat(item.price), 0);
-    cartTotal.textContent = total.toLocaleString('vi-VN') + ' ₫';
-    
-    // Update button states
-    updateButtonStates();
-}
+        {% endif %}
 
-// Add item to cart
-function addToCart(id, name, price) {
-    cart.push({ id, name, price });
-    localStorage.setItem('restaurantCart', JSON.stringify(cart));
-    updateCartDisplay();
-    
-    // Visual feedback
-    const button = event.target.closest('.add-btn');
-    const originalText = button.innerHTML;
-    button.innerHTML = '<i class="fas fa-check"></i> Đã Thêm!';
-    button.classList.add('added');
-    
-    setTimeout(() => {
-        button.innerHTML = originalText;
-        button.classList.remove('added');
-    }, 1000);
-    
-    // Show success animation
-    showNotification('Đã thêm vào giỏ hàng!');
-}
+        <div class="news-media">
+            {% if item.image %}
+                <img src="{{ item.image.url }}" alt="{{ item.name }}">
+            {% else %}
+                <div style="height:100%; display:flex; justify-content:center; align-items:center; font-size:4rem; opacity:0.3;">
+                    🍜
+                </div>
+            {% endif %}
+        </div>
 
-// Clear cart
-function clearCart() {
-    if (confirm('Bạn có chắc muốn xóa toàn bộ giỏ hàng?')) {
-        cart = [];
-        localStorage.setItem('restaurantCart', JSON.stringify(cart));
-        updateCartDisplay();
-        showNotification('Đã xóa giỏ hàng');
-    }
-}
+        <div class="category-tag-overlay">
+            {{ item.category.name }}
+        </div>
 
-// Proceed to order
-function proceedToOrder() {
-    if (cart.length === 0) {
-        alert('Giỏ hàng trống! Vui lòng thêm món ăn.');
-        return;
-    }
-    
-    // Store cart in sessionStorage for order page
-    sessionStorage.setItem('menuCart', JSON.stringify(cart));
-    window.location.href = "{% url 'place_order' %}";
-}
+        <div class="news-content">
+            <h2 class="news-title">{{ item.name }}</h2>
+            <p class="news-text">{{ item.description }}</p>
 
-// Update button states
-function updateButtonStates() {
-    const itemsInCart = cart.reduce((acc, item) => {
-        acc[item.id] = (acc[item.id] || 0) + 1;
-        return acc;
-    }, {});
-    
-    document.querySelectorAll('.menu-item').forEach(item => {
-        const id = item.dataset.id;
-        const btn = item.querySelector('.add-btn');
-        if (btn && itemsInCart[id]) {
-            const count = itemsInCart[id];
-            // Visual indicator that item is in cart (optional)
-        }
-    });
-}
+            <div class="price-tag">{{ item.price|vnd_format }} ₫</div>
 
-// Show notification
-function showNotification(message) {
-    const notification = document.createElement('div');
-    notification.textContent = message;
-    notification.style.cssText = `
-        position: fixed;
-        top: 100px;
-        right: 20px;
-        background: #28a745;
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-    `;
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => notification.remove(), 300);
-    }, 2000);
-}
+            <div class="availability {% if item.is_available %}available{% else %}unavailable{% endif %}">
+                {% if item.is_available %}✓ Còn hàng{% else %}✗ Hết hàng{% endif %}
+            </div>
+        </div>
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    updateCartDisplay();
-});
+    </a>
 
-// Add CSS animations
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateX(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-    @keyframes slideOut {
-        from {
-            opacity: 1;
-            transform: translateX(0);
-        }
-        to {
-            opacity: 0;
-            transform: translateX(20px);
-        }
-    }
-`;
-document.head.appendChild(style);
-</script>
+    {% endfor %}
+</div>
+
 {% endblock %}

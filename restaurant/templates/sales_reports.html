@@ -22,11 +22,6 @@
         margin: 0;
     }
     
-    .admin-header p {
-        margin: 0;
-        opacity: 0.95;
-    }
-    
     .back-to-admin {
         background: white;
         color: var(--primary-color);
@@ -48,7 +43,6 @@
         border-radius: 10px;
         margin-bottom: 2rem;
         border: 1px solid var(--border-color);
-        box-shadow: 0 4px 6px var(--shadow);
     }
     
     .filter-form {
@@ -78,7 +72,6 @@
         border-radius: 8px;
         background: var(--card-bg);
         color: var(--text-color);
-        font-weight: 500;
     }
     
     .tab-buttons {
@@ -99,10 +92,6 @@
         transition: var(--transition);
     }
     
-    .tab-button:hover {
-        background: rgba(212, 168, 67, 0.1);
-    }
-    
     .tab-button.active {
         background: var(--primary-color);
         color: white;
@@ -110,7 +99,7 @@
     
     .summary-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 1.5rem;
         margin-bottom: 2rem;
     }
@@ -124,7 +113,7 @@
     }
     
     .summary-icon {
-        font-size: 2rem;
+        font-size: 2.5rem;
         margin-bottom: 0.5rem;
     }
     
@@ -135,7 +124,7 @@
     }
     
     .summary-value {
-        font-size: 1.8rem;
+        font-size: 2rem;
         font-weight: bold;
         color: var(--primary-color);
     }
@@ -146,53 +135,42 @@
         border-radius: 10px;
         margin-bottom: 2rem;
         border: 1px solid var(--border-color);
-        box-shadow: 0 4px 6px var(--shadow);
     }
     
     .chart-section h2 {
         color: var(--text-color);
         margin-bottom: 1.5rem;
-        font-weight: 600;
-        font-size: 1.5rem;
     }
     
     .chart-container {
         min-height: 300px;
     }
     
-    .data-table-container {
-        background: var(--card-bg);
-        border-radius: 10px;
-        overflow-x: auto;
-        border: 1px solid var(--border-color);
-        margin-top: 1rem;
-    }
-    
     .data-table {
         width: 100%;
         border-collapse: collapse;
+        margin-top: 1rem;
     }
     
-    .data-table thead {
-        background: var(--primary-color);
-        color: white;
+    .data-table th,
+    .data-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
     }
     
     .data-table th {
-        padding: 1rem;
-        text-align: left;
+        background: var(--primary-color);
+        color: white;
         font-weight: 600;
-        white-space: nowrap;
-    }
-    
-    .data-table td {
-        padding: 1rem;
-        border-bottom: 1px solid var(--border-color);
-        color: var(--text-color);
     }
     
     .data-table tr:hover {
         background: var(--border-color);
+    }
+    
+    .data-table td {
+        color: var(--text-color);
     }
     
     .number-cell {
@@ -217,12 +195,6 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        transition: var(--transition);
-    }
-    
-    .export-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(212, 168, 67, 0.4);
     }
     
     @media (max-width: 768px) {
@@ -237,10 +209,6 @@
         
         .tab-buttons {
             flex-wrap: wrap;
-        }
-        
-        .data-table {
-            font-size: 0.85rem;
         }
     }
 </style>
@@ -339,69 +307,65 @@
 <!-- Sales Data Table -->
 <div class="chart-section">
     <h2>📋 Chi Tiết Doanh Thu</h2>
-    <div class="data-table-container">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Thời Gian</th>
-                    <th class="number-cell">Số Đơn</th>
-                    <th class="number-cell">Doanh Thu</th>
-                    <th class="number-cell">Giảm Giá</th>
-                    <th class="number-cell">Doanh Thu Gốc</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for data in sales_data %}
-                <tr>
-                    <td><strong>{{ data.period }}</strong></td>
-                    <td class="number-cell">{{ data.orders|intcomma }}</td>
-                    <td class="number-cell">{{ data.sales|floatformat:0|intcomma }} ₫</td>
-                    <td class="number-cell">{{ data.discount|floatformat:0|intcomma }} ₫</td>
-                    <td class="number-cell">{{ data.sales_before_discount|floatformat:0|intcomma }} ₫</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-color); opacity: 0.7;">
-                        Không có dữ liệu trong khoảng thời gian này
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Thời Gian</th>
+                <th class="number-cell">Số Đơn</th>
+                <th class="number-cell">Doanh Thu</th>
+                <th class="number-cell">Giảm Giá</th>
+                <th class="number-cell">Doanh Thu Gốc</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in sales_data %}
+            <tr>
+                <td>{{ data.period }}</td>
+                <td class="number-cell">{{ data.orders|intcomma }}</td>
+                <td class="number-cell">{{ data.sales|floatformat:0|intcomma }} ₫</td>
+                <td class="number-cell">{{ data.discount|floatformat:0|intcomma }} ₫</td>
+                <td class="number-cell">{{ data.sales_before_discount|floatformat:0|intcomma }} ₫</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 2rem; opacity: 0.7;">
+                    Không có dữ liệu trong khoảng thời gian này
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 
 <!-- Discount Breakdown -->
 <div class="chart-section">
     <h2>🎁 Phân Tích Giảm Giá</h2>
-    <div class="data-table-container">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Loại Giảm Giá</th>
-                    <th class="number-cell">Số Lần Sử Dụng</th>
-                    <th class="number-cell">Tổng Tiền Giảm</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><strong>Giảm 5%</strong></td>
-                    <td class="number-cell">{{ discount_breakdown.5_percent_count|intcomma }}</td>
-                    <td class="number-cell">{{ discount_breakdown.5_percent_amount|floatformat:0|intcomma }} ₫</td>
-                </tr>
-                <tr>
-                    <td><strong>Giảm 10% (VIP)</strong></td>
-                    <td class="number-cell">{{ discount_breakdown.10_percent_count|intcomma }}</td>
-                    <td class="number-cell">{{ discount_breakdown.10_percent_amount|floatformat:0|intcomma }} ₫</td>
-                </tr>
-                <tr style="font-weight: bold; background: var(--border-color);">
-                    <td>Tổng</td>
-                    <td class="number-cell">{{ discount_breakdown.5_percent_count|add:discount_breakdown.10_percent_count|intcomma }}</td>
-                    <td class="number-cell">{{ summary.total_discount|floatformat:0|intcomma }} ₫</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Loại Giảm Giá</th>
+                <th class="number-cell">Số Lần Sử Dụng</th>
+                <th class="number-cell">Tổng Tiền Giảm</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Giảm 5%</td>
+                <td class="number-cell">{{ discount_breakdown.5_percent_count|intcomma }}</td>
+                <td class="number-cell">{{ discount_breakdown.5_percent_amount|floatformat:0|intcomma }} ₫</td>
+            </tr>
+            <tr>
+                <td>Giảm 10% (VIP)</td>
+                <td class="number-cell">{{ discount_breakdown.10_percent_count|intcomma }}</td>
+                <td class="number-cell">{{ discount_breakdown.10_percent_amount|floatformat:0|intcomma }} ₫</td>
+            </tr>
+            <tr style="font-weight: bold; background: var(--border-color);">
+                <td>Tổng</td>
+                <td class="number-cell">{{ discount_breakdown.5_percent_count|add:discount_breakdown.10_percent_count|intcomma }}</td>
+                <td class="number-cell">{{ summary.total_discount|floatformat:0|intcomma }} ₫</td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 
 <!-- Payment Methods -->
@@ -423,10 +387,7 @@
         paymentMethods: {{ chart_data.payment_methods|safe }}
     };
     
-    // Get text color from CSS variable for charts
-    const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim();
-    Chart.defaults.color = textColor;
-    Chart.defaults.font.weight = '600';
+    Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--text-color');
     
     // Sales Chart
     const salesCtx = document.getElementById('salesChart');
@@ -440,23 +401,17 @@
                         label: 'Doanh Thu (₫)',
                         data: chartData.salesData.map(d => d.sales),
                         borderColor: '#D4A843',
-                        backgroundColor: 'rgba(212, 168, 67, 0.15)',
-                        borderWidth: 3,
+                        backgroundColor: 'rgba(212, 168, 67, 0.1)',
                         fill: true,
-                        tension: 0.4,
-                        pointRadius: 5,
-                        pointHoverRadius: 7
+                        tension: 0.4
                     },
                     {
                         label: 'Giảm Giá (₫)',
                         data: chartData.salesData.map(d => d.discount),
                         borderColor: '#FF6B6B',
-                        backgroundColor: 'rgba(255, 107, 107, 0.15)',
-                        borderWidth: 3,
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
                         fill: true,
-                        tension: 0.4,
-                        pointRadius: 5,
-                        pointHoverRadius: 7
+                        tension: 0.4
                     }
                 ]
             },
@@ -467,50 +422,14 @@
                     y: {
                         beginAtZero: true,
                         ticks: {
-                            color: textColor,
-                            font: {
-                                weight: '600'
-                            },
                             callback: function(value) {
                                 return value.toLocaleString('vi-VN') + ' ₫';
                             }
-                        },
-                        grid: {
-                            color: 'rgba(212, 168, 67, 0.1)'
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            color: textColor,
-                            font: {
-                                weight: '600'
-                            }
-                        },
-                        grid: {
-                            color: 'rgba(212, 168, 67, 0.1)'
                         }
                     }
                 },
                 plugins: {
-                    legend: {
-                        labels: {
-                            color: textColor,
-                            font: {
-                                weight: '600',
-                                size: 13
-                            }
-                        }
-                    },
                     tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#fff',
-                        bodyColor: '#fff',
-                        titleFont: {
-                            weight: 'bold'
-                        },
-                        bodyFont: {
-                            weight: '600'
-                        },
                         callbacks: {
                             label: function(context) {
                                 return context.dataset.label + ': ' + 
@@ -538,34 +457,14 @@
                 labels: chartData.paymentMethods.map(p => paymentLabels[p.payment_method] || p.payment_method),
                 datasets: [{
                     data: chartData.paymentMethods.map(p => p.revenue),
-                    backgroundColor: ['#D4A843', '#B8860B', '#C19A3B'],
-                    borderWidth: 3,
-                    borderColor: '#fff'
+                    backgroundColor: ['#D4A843', '#B8860B', '#C19A3B']
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        labels: {
-                            color: textColor,
-                            font: {
-                                weight: '600',
-                                size: 13
-                            }
-                        }
-                    },
                     tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#fff',
-                        bodyColor: '#fff',
-                        titleFont: {
-                            weight: 'bold'
-                        },
-                        bodyFont: {
-                            weight: '600'
-                        },
                         callbacks: {
                             label: function(context) {
                                 return context.label + ': ' + 

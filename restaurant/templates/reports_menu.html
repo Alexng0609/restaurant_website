@@ -4,233 +4,104 @@
 {% block title %}Báo Cáo - Admin{% endblock %}
 
 {% block content %}
+
 <style>
+
     .reports-hero {
         background: var(--nav-bg);
         color: white;
-        padding: 3rem 2rem;
+        padding: 3rem;
         border-radius: 15px;
         text-align: center;
         margin-bottom: 3rem;
-        box-shadow: 0 10px 30px rgba(212, 168, 67, 0.3);
+        box-shadow: 0 10px 25px rgba(212,168,67,0.3);
     }
-    
-    .reports-hero h1 {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-    }
-    
-    .reports-hero p {
-        font-size: 1.2rem;
-        opacity: 0.95;
-    }
-    
-    .reports-grid {
+
+    .news-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
         gap: 2rem;
-        margin-bottom: 3rem;
+        max-width: 1200px;
+        margin: 0 auto;
     }
-    
-    .report-card {
+
+    .news-card {
         background: var(--card-bg);
-        border-radius: 15px;
-        padding: 2.5rem;
-        box-shadow: 0 4px 6px var(--shadow);
-        border: 2px solid var(--border-color);
-        transition: var(--transition);
-        text-decoration: none;
-        display: block;
-        position: relative;
+        border-radius: 12px;
         overflow: hidden;
-    }
-    
-    .report-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 5px;
-        background: var(--primary-color);
-        transform: scaleX(0);
-        transition: transform 0.3s ease;
-    }
-    
-    .report-card:hover::before {
-        transform: scaleX(1);
-    }
-    
-    .report-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 12px 25px var(--shadow);
-        border-color: var(--primary-color);
-    }
-    
-    .report-icon {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        display: block;
-    }
-    
-    .report-card h2 {
-        color: var(--primary-color);
-        font-size: 2rem;
-        margin-bottom: 1rem;
-    }
-    
-    .report-card p {
-        color: var(--text-color);
-        opacity: 0.8;
-        line-height: 1.6;
-        margin-bottom: 1.5rem;
-    }
-    
-    .report-features {
-        list-style: none;
-        padding: 0;
-        margin: 1rem 0;
-    }
-    
-    .report-features li {
-        color: var(--text-color);
-        padding: 0.5rem 0;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .report-features li i {
-        color: var(--primary-color);
-    }
-    
-    .view-report-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.5rem;
-        background: var(--primary-color);
-        color: white;
-        border-radius: 8px;
-        font-weight: 600;
-        transition: var(--transition);
-        margin-top: 1rem;
-    }
-    
-    .report-card:hover .view-report-btn {
-        background: var(--secondary-color);
-        transform: translateX(5px);
-    }
-    
-    .admin-links {
-        background: var(--card-bg);
-        border-radius: 10px;
-        padding: 2rem;
-        text-align: center;
         border: 1px solid var(--border-color);
-    }
-    
-    .admin-links h3 {
-        color: var(--text-color);
-        margin-bottom: 1rem;
-    }
-    
-    .admin-buttons {
+        box-shadow: 0 4px 6px var(--shadow);
+        transition: 0.3s ease;
+        height: 450px; /* FIXED */
         display: flex;
-        gap: 1rem;
+        flex-direction: column;
+        text-decoration: none;
+    }
+
+    .news-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 22px var(--shadow);
+    }
+
+    .news-media {
+        width: 100%;
+        height: 180px;
+        background: #e5e5e5;
+        display: flex;
+        align-items: center;
         justify-content: center;
-        flex-wrap: wrap;
+        font-size: 4rem;
+        opacity: 0.7;
     }
-    
-    
-    @media (max-width: 768px) {
-        .reports-hero h1 {
-            font-size: 2rem;
-        }
-        
-        .reports-grid {
-            grid-template-columns: 1fr;
-        }
+
+    .news-content {
+        padding: 1.5rem;
+        flex: 1;
     }
-    
+
+    .news-title {
+        font-size: 1.6rem;
+        color: var(--primary-color);
+        margin-bottom: 0.8rem;
+    }
+
+    .news-text {
+        color: var(--text-color);
+        opacity: 0.9;
+        line-height: 1.5;
+    }
+
 </style>
 
 <div class="reports-hero">
     <h1>📊 Hệ Thống Báo Cáo</h1>
-    <p>Phân tích chi tiết về khách hàng và doanh thu của nhà hàng</p>
+    <p>Thống kê & phân tích chi tiết cho quản lý nhà hàng</p>
 </div>
 
-<div class="reports-grid">
-    <!-- User Reports Card -->
-    <a href="{% url 'user_reports' %}" class="report-card">
-        <span class="report-icon">👥</span>
-        <h2>Báo Cáo Khách Hàng</h2>
-        <p>Phân tích chi tiết về hoạt động và chi tiêu của khách hàng</p>
-        
-        <ul class="report-features">
-            <li><i class="fas fa-check-circle"></i> Tổng số đơn hàng của từng khách</li>
-            <li><i class="fas fa-check-circle"></i> Tổng chi tiêu và tiết kiệm</li>
-            <li><i class="fas fa-check-circle"></i> Sử dụng khuyến mãi</li>
-            <li><i class="fas fa-check-circle"></i> Điểm thưởng và VIP status</li>
-            <li><i class="fas fa-check-circle"></i> Tìm kiếm và sắp xếp</li>
-            <li><i class="fas fa-check-circle"></i> Xuất CSV</li>
-        </ul>
-        
-        <span class="view-report-btn">
-            Xem Báo Cáo
-            <i class="fas fa-arrow-right"></i>
-        </span>
+<div class="news-grid">
+
+    <a href="{% url 'user_reports' %}" class="news-card">
+        <div class="news-media">👥</div>
+
+        <div class="news-content">
+            <h2 class="news-title">Báo Cáo Khách Hàng</h2>
+            <p class="news-text">
+                Theo dõi tổng số đơn hàng, chi tiêu, điểm thưởng, VIP, và hành vi khách hàng.
+            </p>
+        </div>
     </a>
-    
-    <!-- Sales Reports Card -->
-    <a href="{% url 'sales_reports' %}" class="report-card">
-        <span class="report-icon">💰</span>
-        <h2>Báo Cáo Doanh Thu</h2>
-        <p>Theo dõi doanh số theo ngày, tháng và năm</p>
-        
-        <ul class="report-features">
-            <li><i class="fas fa-check-circle"></i> Báo cáo theo giờ (Daily)</li>
-            <li><i class="fas fa-check-circle"></i> Báo cáo theo ngày (Monthly)</li>
-            <li><i class="fas fa-check-circle"></i> Báo cáo theo tháng (Annual)</li>
-            <li><i class="fas fa-check-circle"></i> Phân tích giảm giá</li>
-            <li><i class="fas fa-check-circle"></i> Biểu đồ trực quan</li>
-            <li><i class="fas fa-check-circle"></i> Xuất CSV và In</li>
-        </ul>
-        
-        <span class="view-report-btn">
-            Xem Báo Cáo
-            <i class="fas fa-arrow-right"></i>
-        </span>
+
+    <a href="{% url 'sales_reports' %}" class="news-card">
+        <div class="news-media">💰</div>
+
+        <div class="news-content">
+            <h2 class="news-title">Báo Cáo Doanh Thu</h2>
+            <p class="news-text">
+                Thống kê doanh số theo ngày, tháng, năm — kèm biểu đồ & dữ liệu chi tiết.
+            </p>
+        </div>
     </a>
+
 </div>
 
-<!-- Admin Panel Link -->
-<div class="admin-links">
-    <h3>🔧 Quản Trị Hệ Thống</h3>
-    <div class="admin-buttons">
-        <a href="/admin/" class="btn">
-            <i class="fas fa-cog"></i> Admin Panel
-        </a>
-        <a href="{% url 'index' %}" class="btn btn-secondary">
-            <i class="fas fa-home"></i> Về Trang Chủ
-        </a>
-    </div>
-</div>
-
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    // Animate cards on load
-    window.addEventListener('DOMContentLoaded', function() {
-        gsap.from('.report-card', {
-            y: 50,
-            opacity: 0,
-            duration: 0.8,
-            stagger: 0.2,
-            ease: 'power2.out'
-        });
-    });
-</script>
 {% endblock %}
