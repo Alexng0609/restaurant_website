@@ -23,4 +23,5 @@ urlpatterns = [
     path("admin-reports/", views.admin_reports, name="admin_reports"),
     path("reports/users/", views.user_reports, name="user_reports"),
     path("reports/sales/", views.sales_reports, name="sales_reports"),
+    path("reports/", views.reports_menu, name="reports_menu"),
 ]

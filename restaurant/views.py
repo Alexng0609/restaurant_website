@@ -23,6 +23,7 @@ from datetime import datetime, timedelta
 from django.db import models
 import json
 from django.contrib.auth.models import User
+from .forms import CustomSignupForm
 
 
 def index(request):
@@ -354,21 +355,21 @@ def redeem_reward(request, reward_id=None):
 
 
 def signup_view(request):
-    """User registration - matches urls.py name"""
+    """User registration with custom form"""
     if request.method == "POST":
-        form = UserCreationForm(request.POST)
+        form = CustomSignupForm(request.POST)
         if form.is_valid():
             user = form.save()
-            # Create customer profile
-            CustomerProfile.objects.create(user=user)
-            username = form.cleaned_data.get("username")
-            messages.success(request, f"Tài khoản đã được tạo cho {username}!")
+            first_name = form.cleaned_data.get("first_name")
+            messages.success(
+                request, f"Chào mừng {first_name}! Tài khoản đã được tạo thành công."
+            )
             login(request, user)
             return redirect("index")
     else:
-        form = UserCreationForm()
+        form = CustomSignupForm()
 
-    return render(request, "register.html", {"form": form})
+    return render(request, "signup.html", {"form": form})
 
 
 def login_view(request):
@@ -849,3 +850,9 @@ def sales_reports(request):
     }
 
     return render(request, "sales_reports.html", context)
+
+
+@staff_member_required
+def reports_menu(request):
+    """Reports landing page for admin"""
+    return render(request, "reports_menu.html")

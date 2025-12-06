@@ -165,7 +165,7 @@
             transform: scale(1.05);
         }
         
-        /* Messages */
+        /* Messages - FIXED FOR 15 SECONDS */
         .messages {
             margin: 20px auto;
             max-width: 1200px;
@@ -173,22 +173,11 @@
         }
         
         .message {
-            padding: 15px 20px;
+            padding: 15px 50px 15px 20px;
             margin-bottom: 10px;
             border-radius: 8px;
             box-shadow: 0 2px 5px var(--shadow);
-            animation: slideIn 0.5s ease;
-        }
-        
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+            position: relative;
         }
         
         .message.success {
@@ -207,6 +196,30 @@
             background: #d1ecf1;
             color: #0c5460;
             border-left: 4px solid #17a2b8;
+        }
+        
+        .close-message {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: inherit;
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+            padding: 5px;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-message:hover {
+            opacity: 1;
         }
         
         /* Main Content */
@@ -413,7 +426,15 @@
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'place_order' %}">Đặt Món</a></li>
                     <li><a href="{% url 'order_history' %}">Lịch Sử</a></li>
-                    <li><a href="{% url 'profile' %}">Hồ Sơ </a></li>
+                    
+                    {% if user.is_staff %}
+                        <!-- Show Reports Menu for Admin -->
+                        <li><a href="{% url 'reports_menu' %}">📊 Báo Cáo</a></li>
+                    {% else %}
+                        <!-- Show Profile for Regular Users -->
+                        <li><a href="{% url 'profile' %}">Hồ Sơ</a></li>
+                    {% endif %}
+                    
                     <li><a href="{% url 'logout' %}">Đăng Xuất</a></li>
                 {% else %}
                     <li><a href="{% url 'login' %}">Đăng Nhập</a></li>
@@ -432,7 +453,7 @@
     {% if messages %}
     <div class="messages">
         {% for message in messages %}
-        <div class="message {{ message.tags }} fade-in">
+        <div class="message {{ message.tags }}">
             {{ message }}
         </div>
         {% endfor %}
@@ -507,14 +528,7 @@
                 ease: 'power3.out'
             });
             
-            // Animate messages
-            gsap.from('.message', {
-                x: -50,
-                opacity: 0,
-                duration: 0.6,
-                stagger: 0.2,
-                ease: 'power2.out'
-            });
+            // DON'T animate messages with GSAP - let the timer handle them
             
             // Animate cards on scroll
             gsap.utils.toArray('.card').forEach((card, index) => {
@@ -615,6 +629,42 @@
                     duration: 0.3,
                     ease: 'power2.out'
                 });
+            });
+        });
+        
+        // ===== 15 SECOND MESSAGE AUTO-DISMISS =====
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('.message');
+            
+            messages.forEach(message => {
+                // Add close button
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'close-message';
+                closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                closeBtn.onclick = function() {
+                    message.style.transition = 'all 0.3s ease';
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateX(-50px)';
+                    setTimeout(() => message.remove(), 300);
+                };
+                message.appendChild(closeBtn);
+                
+                // Slide in animation
+                message.style.opacity = '0';
+                message.style.transform = 'translateX(-20px)';
+                setTimeout(() => {
+                    message.style.transition = 'all 0.5s ease';
+                    message.style.opacity = '1';
+                    message.style.transform = 'translateX(0)';
+                }, 100);
+                
+                // Auto-dismiss after 15 seconds (15000 milliseconds)
+                setTimeout(() => {
+                    message.style.transition = 'all 0.5s ease';
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateX(-50px)';
+                    setTimeout(() => message.remove(), 500);
+                }, 15000); // 15 SECONDS
             });
         });
     </script>

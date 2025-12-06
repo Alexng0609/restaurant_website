@@ -336,7 +336,7 @@
         </div>
         
         <!-- Free Item - 20000 points -->
-        <div class="redemption-card {% if profile.points < 20000 %}disabled{% endif %}">
+        <div class="redemption-card {% if profile.points < 200000 %}disabled{% endif %}">
             <div class="redemption-badge">🎁</div>
             <h3>🍲 Phần Đậm Ấm Miễn Phí</h3>
             <div class="points-required">200.000 điểm</div>
@@ -348,7 +348,7 @@
             <form method="post" action="{% url 'redeem_reward' %}">
                 {% csrf_token %}
                 <input type="hidden" name="reward_type" value="phan_dam_am">
-                <button type="submit" class="btn" {% if profile.points < 20000 %}disabled{% endif %}>
+                <button type="submit" class="btn" {% if profile.points < 200000 %}disabled{% endif %}>
                     {% if profile.points < 200000 %}
                         Cần thêm {{ 200000|add:profile.points|add:"-"|vnd_format }} điểm
                     {% else %}

@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from .models import CustomerProfile
 
 
-class CustomSignUpForm(UserCreationForm):
+class CustomSignupForm(UserCreationForm):
     """Custom signup form with additional fields for name and phone"""
 
     first_name = forms.CharField(
