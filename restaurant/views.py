@@ -24,6 +24,8 @@ from django.db import models
 import json
 from django.contrib.auth.models import User
 from .forms import CustomSignupForm
+from django.shortcuts import render, get_object_or_404
+from .models import MenuItem
 
 
 def index(request):
@@ -79,6 +81,11 @@ def menu(request):
         "selected_category": selected_category,
     }
     return render(request, "menu.html", context)
+
+
+def menu_item_detail(request, item_id):
+    item = get_object_or_404(MenuItem, id=item_id)
+    return render(request, "menu_item_detail.html", {"item": item})
 
 
 @login_required

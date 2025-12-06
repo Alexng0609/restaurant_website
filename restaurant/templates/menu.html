@@ -64,18 +64,16 @@
     }
 
     .news-card {
+        position: relative;
         background: var(--card-bg);
         border-radius: 10px;
         overflow: hidden;
         box-shadow: 0 4px 6px var(--shadow);
         border: 1px solid var(--border-color);
         transition: var(--transition);
-        position: relative;
-        height: 520px;
+        height: 560px;
         display: flex;
         flex-direction: column;
-        text-decoration: none;
-        color: inherit;
     }
 
     .news-card:hover {
@@ -83,6 +81,14 @@
         box-shadow: 0 12px 20px var(--shadow);
     }
 
+    /* Entire card clickable */
+    .card-link {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+    }
+
+    /* Admin controls above clickable layer */
     .admin-controls {
         position: absolute;
         top: 10px;
@@ -99,12 +105,11 @@
         border-radius: 6px;
         font-size: 0.85rem;
         text-decoration: none;
-        transition: 0.2s ease;
+        transition: 0.2s;
     }
 
     .admin-btn:hover {
         background: #D4A843;
-        color: #fff;
     }
 
     .news-media {
@@ -135,6 +140,7 @@
         font-size: 0.85rem;
         border-radius: 20px;
         font-weight: 700;
+        z-index: 20;
     }
 
     .news-content {
@@ -142,6 +148,7 @@
         flex: 1;
         display: flex;
         flex-direction: column;
+        z-index: 10;
     }
 
     .news-title {
@@ -172,6 +179,7 @@
         font-weight: bold;
         text-align: center;
         font-size: 0.9rem;
+        margin-bottom: 1rem;
     }
 
     .available {
@@ -182,6 +190,26 @@
     .unavailable {
         background: #f8d7da;
         color: #721c24;
+    }
+
+    /* Add to order button */
+    .add-btn {
+        position: relative;
+        z-index: 20;
+        background: #D4A843;
+        padding: 10px 0;
+        width: 100%;
+        text-align: center;
+        border-radius: 8px;
+        font-weight: 700;
+        color: #fff;
+        text-decoration: none;
+        transition: 0.25s;
+        margin-top: auto;
+    }
+
+    .add-btn:hover {
+        background: #b88c36;
     }
 </style>
 
@@ -212,8 +240,10 @@
 <div class="news-grid">
     {% for item in menu_items %}
 
-    <!-- Whole card is clickable for guests -->
-    <a href="#" class="news-card">
+    <div class="news-card">
+
+        <!-- Entire card clickable -->
+        <a href="{% url 'menu_item_detail' item.id %}" class="card-link"></a>
 
         {% if user.is_staff %}
         <div class="admin-controls">
@@ -248,9 +278,14 @@
             <div class="availability {% if item.is_available %}available{% else %}unavailable{% endif %}">
                 {% if item.is_available %}✓ Còn hàng{% else %}✗ Hết hàng{% endif %}
             </div>
+
+            <!-- Add to order -->
+            <a href="#" class="add-btn" onclick="event.stopPropagation();">
+                ➕ Thêm vào giỏ
+            </a>
         </div>
 
-    </a>
+    </div>
 
     {% endfor %}
 </div>
