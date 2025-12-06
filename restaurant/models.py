@@ -271,7 +271,20 @@ class Cart(models.Model):
 
     def clear(self):
         """Remove all items from cart"""
-        self.items.all().delete()
+        # Delete all cart items
+        deleted_count = self.items.all().delete()
+
+        # Update cart timestamp
+        from django.utils import timezone
+
+        self.updated_at = timezone.now()
+        self.save(update_fields=["updated_at"])
+
+        return deleted_count
+
+    def get_item_count(self):
+        """Alternative method to get item count"""
+        return self.items.count()
 
 
 class CartItem(models.Model):

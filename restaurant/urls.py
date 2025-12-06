@@ -6,7 +6,6 @@ urlpatterns = [
     path("feeds/", views.feeds, name="feeds"),
     path("menu/", views.menu, name="menu"),
     path("order/", views.place_order, name="place_order"),
-    path("checkout/", views.checkout, name="checkout"),
     path("order-history/", views.order_history, name="order_history"),
     # Redemption URLs
     path("redeem/discount/", views.redeem_discount, name="redeem_discount"),
@@ -39,9 +38,11 @@ urlpatterns = [
         name="remove_from_cart",
     ),
     path("checkout/", views.checkout_view, name="checkout"),
+    # Confirmation
     path(
         "order/confirmation/<int:order_id>/",
         views.order_confirmation_view,
         name="order_confirmation",
     ),
+    path("cart/add/<int:item_id>/", views.add_to_cart_view, name="add_to_cart"),
 ]

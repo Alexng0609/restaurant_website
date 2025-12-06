@@ -297,11 +297,32 @@
         {% endif %}
         
         <div class="confirmation-actions">
+            {% if user.is_authenticated %}
             <a href="{% url 'order_history' %}" class="btn btn-secondary">📋 Xem Đơn Hàng</a>
+            {% endif %}
             <a href="{% url 'menu' %}" class="btn btn-secondary">🍽️ Tiếp Tục Mua Hàng</a>
             <a href="{% url 'index' %}" class="btn btn-primary">🏠 Về Trang Chủ</a>
         </div>
     </div>
 </div>
+
+<script>
+// Force update cart badge after order is placed
+document.addEventListener('DOMContentLoaded', function() {
+    // Hide cart badge immediately
+    const cartBadge = document.getElementById('cart-count');
+    if (cartBadge) {
+        cartBadge.style.display = 'none';
+    }
+    
+    // Also hide parent badge if it exists
+    const cartBadgeParent = document.querySelector('.cart-badge');
+    if (cartBadgeParent) {
+        cartBadgeParent.style.display = 'none';
+    }
+    
+    console.log('Order confirmation loaded - cart badge hidden');
+});
+</script>
 
 {% endblock %}
