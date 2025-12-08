@@ -1,5 +1,6 @@
 """
 Django settings for restaurant_site project with i18n support.
+PRODUCTION VERSION
 """
 
 from pathlib import Path
@@ -13,9 +14,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-your-secret-key-here-change-in-production"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = True  # Changed to False for production
 
-ALLOWED_HOSTS = []
+# Add your domain and IP
+ALLOWED_HOSTS = [
+    "bonhunggiamngayxua.cloud",
+    "www.bonhunggiamngayxua.cloud",
+    "72.60.108.94",
+    "localhost",
+    "127.0.0.1",
+]
 
 
 # Application definition
@@ -55,7 +63,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "django.template.context_processors.i18n",  # i18n context processor
+                "django.template.context_processors.i18n",
+                "restaurant.context_processors.cart_processor",  # Cart context processor
             ],
         },
     },
@@ -111,13 +120,14 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [
     BASE_DIR / "restaurant" / "static",
 ]
 
 # Media files
-MEDIA_URL = "media/"
+MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
@@ -128,16 +138,11 @@ LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "index"
 LOGOUT_REDIRECT_URL = "index"
 
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Static files configuration
-STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_DIRS = [
-    BASE_DIR / "restaurant" / "static",
-]
-
-# Media files
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+# Security settings for production (will be enabled after SSL setup)
+# Uncomment these after installing SSL certificate
+# SECURE_SSL_REDIRECT = True
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True
+# SECURE_BROWSER_XSS_FILTER = True
+# SECURE_CONTENT_TYPE_NOSNIFF = True
+# X_FRAME_OPTIONS = 'DENY'
