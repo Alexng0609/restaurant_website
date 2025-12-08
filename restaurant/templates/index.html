@@ -244,6 +244,200 @@
         text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
     }
     
+    /* Google Reviews Section */
+    .reviews-section {
+        padding: 4rem 0;
+        background: var(--bg-color);
+    }
+
+    .google-maps-container {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .map-wrapper {
+        width: 100%;
+        height: 450px;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px var(--shadow);
+    }
+
+    .review-summary {
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px var(--shadow);
+        border: 2px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .rating-overview {
+        text-align: center;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .rating-score .score {
+        font-size: 4rem;
+        font-weight: bold;
+        color: #D4A843;
+        display: block;
+        line-height: 1;
+    }
+
+    .stars {
+        color: #FFD700;
+        font-size: 1.5rem;
+        margin: 0.5rem 0;
+    }
+
+    .review-count {
+        color: var(--text-color);
+        opacity: 0.8;
+        margin-top: 0.5rem;
+    }
+
+    .review-highlights {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .highlight-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: var(--bg-color);
+        border-radius: 8px;
+        transition: var(--transition);
+    }
+
+    .highlight-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px var(--shadow);
+    }
+
+    .highlight-item i {
+        color: #D4A843;
+        font-size: 1.2rem;
+    }
+
+    .highlight-item span {
+        color: var(--text-color);
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .view-reviews-btn,
+    .write-review-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        padding: 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 700;
+        transition: var(--transition);
+        text-align: center;
+    }
+
+    .view-reviews-btn {
+        background: linear-gradient(135deg, #D4A843 0%, #B8860B 100%);
+        color: white;
+    }
+
+    .view-reviews-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px var(--shadow);
+    }
+
+    .write-review-btn {
+        background: var(--card-bg);
+        color: var(--text-color);
+        border: 2px solid var(--border-color);
+    }
+
+    .write-review-btn:hover {
+        border-color: #D4A843;
+        color: #D4A843;
+    }
+
+    .sample-reviews {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .review-card {
+        background: var(--card-bg);
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px var(--shadow);
+        border: 2px solid var(--border-color);
+        transition: var(--transition);
+    }
+
+    .review-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px var(--shadow);
+    }
+
+    .review-header {
+        margin-bottom: 1rem;
+    }
+
+    .reviewer-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .reviewer-avatar {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #D4A843 0%, #B8860B 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .reviewer-info h4 {
+        color: var(--text-color);
+        margin-bottom: 0.25rem;
+    }
+
+    .review-stars {
+        color: #FFD700;
+        font-size: 0.9rem;
+    }
+
+    .review-text {
+        color: var(--text-color);
+        line-height: 1.6;
+        opacity: 0.9;
+        font-style: italic;
+    }
+    
+    @media (max-width: 968px) {
+        .google-maps-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .map-wrapper {
+            height: 350px;
+        }
+    }
+    
     @media (max-width: 768px) {
         .hero-logo {
             width: 120px;
@@ -260,6 +454,14 @@
         
         .cta-section h2 {
             font-size: 1.8rem;
+        }
+        
+        .review-highlights {
+            grid-template-columns: 1fr;
+        }
+        
+        .sample-reviews {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -357,6 +559,149 @@
     </div>
 </section>
 {% endif %}
+
+<!-- Google Reviews Section -->
+<section class="reviews-section">
+    <div class="container">
+        <h2 class="section-title">⭐ Đánh Giá Từ Khách Hàng</h2>
+        <p style="text-align: center; color: var(--text-color); opacity: 0.8; font-size: 1.1rem; margin-bottom: 3rem;">
+            Xem các đánh giá từ khách hàng thực tế trên Google Maps
+        </p>
+
+        <div class="google-maps-container">
+            <!-- Google Maps Embed -->
+            <div class="map-wrapper">
+                <iframe 
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d245.54092675725733!2d105.77067548793478!3d10.038286149532776!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31a0883d181a2ee1%3A0x5d8f6ec3df7f6c9!2zQsOyIE5ow7puZyBHaeG6pW0gTmfDoHkgWMaw!5e0!3m2!1svi!2svn!4v1234567890!5m2!1svi!2svn"
+                    width="100%" 
+                    height="450" 
+                    style="border:0; border-radius: 10px;" 
+                    allowfullscreen="" 
+                    loading="lazy" 
+                    referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+            </div>
+
+            <!-- Review Summary Card -->
+            <div class="review-summary">
+                <div class="rating-overview">
+                    <div class="rating-score">
+                        <span class="score">4.8</span>
+                        <div class="stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <p class="review-count">Nhiều đánh giá trên Google</p>
+                    </div>
+                </div>
+
+                <div class="review-highlights">
+                    <div class="highlight-item">
+                        <i class="fas fa-utensils"></i>
+                        <span>Thực đơn đa dạng</span>
+                    </div>
+                    <div class="highlight-item">
+                        <i class="fas fa-thumbs-up"></i>
+                        <span>Chất lượng tuyệt vời</span>
+                    </div>
+                    <div class="highlight-item">
+                        <i class="fas fa-smile"></i>
+                        <span>Phục vụ tận tình</span>
+                    </div>
+                    <div class="highlight-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Vị trí thuận tiện</span>
+                    </div>
+                </div>
+
+                <a href="https://www.google.com/maps/place/B%C3%B2+Nh%C3%BAng+Gi%E1%BA%A5m+-+Ng%C3%A0y+X%C6%B0a/@10.0220114,105.7425938,17z/data=!4m18!1m9!3m8!1s0x31a0890057173d5d:0xacf5028e89f13e4!2zQsOyIE5ow7puZyBHaeG6pW0gLSBOZ8OgeSBYxrBh!8m2!3d10.0220061!4d105.7451687!9m1!1b1!16s%2Fg%2F11m5xwxfnb!3m7!1s0x31a0890057173d5d:0xacf5028e89f13e4!8m2!3d10.0220061!4d105.7451687!9m1!1b1!16s%2Fg%2F11m5xwxfnb?entry=ttu&g_ep=EgoyMDI1MTIwMi4wIKXMDSoASAFQAw%3D%3D" 
+                   target="_blank" 
+                   rel="noopener noreferrer" 
+                   class="view-reviews-btn">
+                    <i class="fab fa-google"></i>
+                    Xem Tất Cả Đánh Giá
+                </a>
+
+                <a href="https://www.google.com/maps/place/B%C3%B2+Nh%C3%BAng+Gi%E1%BA%A5m+-+Ng%C3%A0y+X%C6%B0a/@10.0220114,105.7425938,17z/data=!4m18!1m9!3m8!1s0x31a0890057173d5d:0xacf5028e89f13e4!2zQsOyIE5ow7puZyBHaeG6pW0gLSBOZ8OgeSBYxrBh!8m2!3d10.0220061!4d105.7451687!9m1!1b1!16s%2Fg%2F11m5xwxfnb!3m7!1s0x31a0890057173d5d:0xacf5028e89f13e4!8m2!3d10.0220061!4d105.7451687!9m1!1b1!16s%2Fg%2F11m5xwxfnb?entry=ttu&g_ep=EgoyMDI1MTIwMi4wIKXMDSoASAFQAw%3D%3D" 
+                   target="_blank" 
+                   rel="noopener noreferrer" 
+                   class="write-review-btn">
+                    <i class="fas fa-edit"></i>
+                    Viết Đánh Giá
+                </a>
+            </div>
+        </div>
+
+        <!-- Sample Reviews -->
+        <div class="sample-reviews">
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="reviewer-info">
+                        <div class="reviewer-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h4>Khách Hàng</h4>
+                            <div class="review-stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="review-text">"Món ăn rất ngon, phục vụ tận tình. Đặc biệt bò nhúng giấm rất đậm đà. Sẽ quay lại!"</p>
+            </div>
+
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="reviewer-info">
+                        <div class="reviewer-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h4>Khách Hàng</h4>
+                            <div class="review-stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="review-text">"Không gian ấm cúng, món ăn tươi ngon. Giá cả hợp lý. Rất hài lòng!"</p>
+            </div>
+
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="reviewer-info">
+                        <div class="reviewer-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h4>Khách Hàng</h4>
+                            <div class="review-stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="review-text">"Quán ăn truyền thống tuyệt vời! Bò nhúng giấm đúng vị, gia vị đậm đà."</p>
+            </div>
+        </div>
+    </div>
+</section>
 
 <div class="cta-section">
     <h2>Nhận Điểm Thưởng Với Mỗi Đơn Hàng! 🎁</h2>
